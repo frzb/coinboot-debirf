@@ -14,7 +14,22 @@ For more information how to boot your machines with Coinboot visit: https://coin
 
 ## Requirements 
 
-Vagrant
+* Vagrant
+
+## Hardware support
+
+All hardware which is supported by a 4.4 `generic` kernel of Debian/Ubuntu should just work out of the box.
+The reference hardware setup is build around a Gigabyte GA-H110-D3A mainboard.
+
+* Architecture: AMD64
+* Chipset: Intel H110
+* CPU: Intel-based with integrated GPU
+* NIC: Realtek RTL8111G
+
+Further hardware support can be added by using the Coinboot plugin system e.g. to integrate the proprietary AMDGPU-Pro driver.
+
+We also try to built up an overview with hardware setups known to work.
+
 
 ## Usage
 
