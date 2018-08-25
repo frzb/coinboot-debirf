@@ -1,3 +1,4 @@
+---
 dist: trusty
 sudo: required
 language: ruby
@@ -10,4 +11,6 @@ before_install:
   - sudo apt-get -y install linux-headers-$(uname -r)
   - sudo apt-get -y install virtualbox-5.2
   - VBoxManage -v
-
+  - gem install vagrant
+script:
+  - vagrant up make-rootfs
