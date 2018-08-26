@@ -6,13 +6,10 @@ rvm:
  - 2.4.1
 before_install:
   - lscpu
-  - sudo echo "deb http://download.virtualbox.org/virtualbox/debian trusty contrib" | sudo tee -a /etc/apt/sources.list
-  - wget http://download.virtualbox.org/virtualbox/debian/oracle_vbox.asc -O- | sudo apt-key add -
   - sudo apt-get update
-  - sudo apt-get -y install linux-headers-$(uname -r)
-  - sudo apt-get -y install virtualbox-5.2
-  - VBoxManage -v
+  - sudo apt-get -y install libvirt-bin libvirt-dev qemu-utils qemu
   - wget https://releases.hashicorp.com/vagrant/2.1.2/vagrant_2.1.2_x86_64.deb && sudo dpkg -i vagrant*
   - vagrant plugin install vagrant-reload
+  - vagrant plugin install vagrant-libvirt
 script:
-  - vagrant up make-rootfs
+  - vagrant up make-rootfs-travisci
