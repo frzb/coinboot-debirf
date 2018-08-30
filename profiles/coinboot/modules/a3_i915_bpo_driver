@@ -41,7 +41,7 @@
 # Files are located here:
 # /lib/firmware/i915/
 
-KERNEL_RELEASE=$(uname -r)
+KERNEL_RELEASE=4.4.0-133-generic
 EXTRA_PACKAGE="linux-image-extra-$KERNEL_RELEASE"
 EXTRA_PACKAGE_FILE=$(apt-cache show $EXTRA_PACKAGE | grep -oP $EXTRA_PACKAGE.*deb)
 MODULE_I915_BPO_PACKAGE_PATH="/lib/modules/$KERNEL_RELEASE/kernel/ubuntu/i915/i915_bpo.ko"

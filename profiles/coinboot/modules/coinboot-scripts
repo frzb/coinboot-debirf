@@ -24,5 +24,5 @@
 
 debirf_exec apt install inotify-tools curl wget --yes
 
-cp -v /vagrant/scripts/* "$DEBIRF_ROOT/usr/local/bin/"
+cp -v /mnt/scripts/* "$DEBIRF_ROOT/usr/local/bin/"
 

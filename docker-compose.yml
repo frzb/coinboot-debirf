@@ -1,0 +1,10 @@
+version: '3'
+
+services:
+  coinboot:
+    container_name: coinboot-debirf
+    image: ubuntu:16.04 
+    volumes:
+      - ./:/mnt
+    command: /bin/bash /mnt/make_rootfs+kernel
+    privileged: true

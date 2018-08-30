@@ -28,7 +28,7 @@
 # B: Use the DKMS package with the sources for the r8168 module.
 # For now we go with B because the footprint and overhead seems to be smaller.
 
-KERNEL_RELEASE=$(uname -r)
+KERNEL_RELEASE=4.4.0-133-generic
 R8168_PACKAGE=r8168-dkms
 PACKAGES='linux-headers-4.4.0-133-generic'
 
