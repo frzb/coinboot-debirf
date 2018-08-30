@@ -1,7 +1,7 @@
 
 ![Logo of Coinboot](https://raw.githubusercontent.com/frzb/coinboot/master/coinboot.png)
 
-[![Build Status](https://travis-ci.com/frzb/coinboot-debirf.svg?branch=travisci)](https://travis-ci.com/frzb/coinboot-debirf)
+[![Build Status](https://travis-ci.com/frzb/coinboot-debirf.svg?branch=master)](https://travis-ci.com/frzb/coinboot-debirf)
 
 ***Building  your own Coinboot image***
 
