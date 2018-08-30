@@ -50,8 +50,8 @@ cp -vr /vagrant/profiles/coinboot /tmp
 #Force a root build without fakeroot
 time su - ubuntu -c 'sudo debirf make -n --root-build --no-warning /tmp/coinboot'
 
-cp -v /tmp/coinboot/vmlinuz* /vagrant/build/vmlinuz
-cp -v /tmp/coinboot/*.cgz /vagrant/build/initramfs
+sudo cp -v /tmp/coinboot/vmlinuz* /vagrant/build/vmlinuz
+sudo cp -v /tmp/coinboot/*.cgz /vagrant/build/initramfs
 
 sudo chmod -v 644 /vagrant/build/*
 
@@ -66,39 +66,18 @@ Vagrant.configure(2) do |config|
   end
 
   config.vm.define "make-rootfs" do |machine|
-    machine.vm.box = "ubuntu/xenial64"
-    machine.vm.hostname = "make-rootfs"
-    # FIXME: Have a look at this Kernel version issue in general.
-    # Take care that the built box is running on the most recent kernel.
-    # For that we have to reboot the Vagrant box which is achieved by
-    # the reload-plugin.
-    #config.vm.provision "shell", inline: 'apt update; apt dist-upgrade --yes'
-    config.vm.provision "shell", inline: 'apt update; apt upgrade --yes'
-    config.vm.provision "shell", inline: 'apt install linux-image-4.4.0-133-generic --yes'
-    config.vm.provision :reload
-    config.vm.provision "shell", inline: $make_kernel_and_rootfs
-    # Dynamically allign number of core of the built VM with the host
-    # to speed up things as much as possible.
-  end
-
-  config.vm.define "make-rootfs-travisci" do |machine|
-    machine.vm.hostname = "make-rootfs-travisci"
-    machine.vm.box = "generic/ubuntu1604"
-    machine.ssh.password = "vagrant"
-    machine.vm.provider "libvirt" do |domain|
-      domain.driver = "qemu"
-      domain.nic_model_type = "e1000"
-    end
-    # FIXME: Have a look at this Kernel version issue in general.
-    # Take care that the built box is running on the most recent kernel.
-    # For that we have to reboot the Vagrant box which is achieved by
-    # the reload-plugin.
-    #config.vm.provision "shell", inline: 'apt update; apt dist-upgrade --yes'
-    config.vm.provision "shell", inline: 'apt update; apt upgrade --yes'
-    config.vm.provision "shell", inline: 'apt install linux-image-4.4.0-133-generic --yes'
-    config.vm.provision :reload
-    config.vm.provision "shell", inline: $make_kernel_and_rootfs
-    # Dynamically allign number of core of the built VM with the host
-    # to speed up things as much as possible.
+  machine.vm.box = "ubuntu/xenial64"
+  machine.vm.hostname = "make-rootfs"
+  # FIXME: Have a look at this Kernel version issue in general.
+  # Take care that the built box is running on the most recent kernel.
+  # For that we have to reboot the Vagrant box which is achieved by
+  # the reload-plugin.
+  #config.vm.provision "shell", inline: 'apt update; apt dist-upgrade --yes'
+  config.vm.provision "shell", inline: 'apt update; apt upgrade --yes'
+  config.vm.provision "shell", inline: 'apt install linux-image-4.4.0-133-generic --yes'
+  config.vm.provision :reload
+  config.vm.provision "shell", inline: $make_kernel_and_rootfs
+  # Dynamically allign number of core of the built VM with the host
+  # to speed up things as much as possible.
   end
 end
