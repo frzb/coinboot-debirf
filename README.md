@@ -1,4 +1,7 @@
+
 ![Logo of Coinboot](https://raw.githubusercontent.com/frzb/coinboot/master/coinboot.png)
+
+[![Build Status](https://travis-ci.com/frzb/coinboot-debirf.svg?branch=travisci)](https://travis-ci.com/frzb/coinboot-debirf)
 
 ***Building  your own Coinboot image***
 
@@ -15,6 +18,10 @@ For more information how to boot your machines with Coinboot visit: https://coin
 ## Requirements 
 
 * Vagrant
+
+or 
+
+* Docker and Docker Compose
 
 ## Hardware support
 
