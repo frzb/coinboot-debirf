@@ -40,10 +40,17 @@ We also try to built up an overview with hardware setups known to work.
 
 ## Usage
 
+For the build process Vagrant or Docker with Docker Compose can be used.  
 To build the Coinboot base image consisting of a initramfs archive (`initramfs`) and kernel archive (`vmlinuz`) run:
 
 ```
 $ vagrant up
+```
+
+or 
+
+```
+$ docker-compose up
 ```
 
 When the build has finished the resulting archives are written to the `./build` directory.
