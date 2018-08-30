@@ -19,6 +19,10 @@ For more information how to boot your machines with Coinboot visit: https://coin
 
 * Vagrant
 
+or 
+
+* Docker and Docker Compose
+
 ## Hardware support
 
 All hardware which is supported by a 4.4 `generic` kernel of Debian/Ubuntu should just work out of the box.
