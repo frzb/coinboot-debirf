@@ -269,9 +269,14 @@ while ! ping $HTTP_SERVER -c 1; do
   sleep 1
 done
 
+curl -s http://$HTTP_SERVER/environment/ | grep -v -Fe '[' -e ']' | cut -f 4 -d'"' | while read environment; do
+  echo "Downloading environment: $environment"
+  wget  http://$HTTP_SERVER/environment/$environment -O - | tee -a /etc/environment
+done
+
 # FIXME: Move this stuff to Python.
 curl -s http://$HTTP_SERVER/plugins/ | grep -v -Fe '[' -e ']' | cut -f 4 -d'"' | while read plugin; do
-  echo "Download and extract plugin: $plugin"
+  echo "Downloading and extracting plugin: $plugin"
   wget  http://$HTTP_SERVER/plugins/$plugin -O - | tar -Pxzvf -
   /usr/local/bin/dpkg_status.py --new /tmp/dpkg_status --old /var/lib/dpkg/status --union > /tmp/status_$plugin
   mv -v /tmp/status_$plugin /var/lib/dpkg/status
