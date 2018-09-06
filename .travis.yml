@@ -6,5 +6,15 @@ rvm:
  - 2.4.1
 before_install:
   - lscpu
+  - sudo apt update
+  - sudo apt install --yes qemu-system-x86 ipxe-qemu sshpass
 script:
   - docker-compose up
+  - qemu-system-x86_64 \
+  -kernel build/vmlinuz \
+  -initrd build/initramfs \
+  -append 'console=ttyS0 net.ifnames=0 biosdevname=0 break=skip_loading_plugins' \
+  -m 2048 \
+  -smp 2 \
+  -serial mon:stdio \
+  -nographic
