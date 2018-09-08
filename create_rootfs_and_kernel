@@ -52,8 +52,8 @@ ls -la /tmp
 #Force a root build without fakeroot
 time debirf make -n --root-build --no-warning /tmp/coinboot
 
-cp -v /tmp/coinboot/vmlinuz* /mnt/build/vmlinuz
-cp -v /tmp/coinboot/*.cgz /mnt/build/initramfs
+cp -v /tmp/coinboot/vmlinuz* /mnt/build/coinboot-vmlinuz-4.4.0-133-generic
+cp -v /tmp/coinboot/*.cgz /mnt/build/coinboot-initramfs-4.4.0-133-generic
 
 sudo chmod -v 644 /mnt/build/*
 

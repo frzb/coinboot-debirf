@@ -1,15 +1,39 @@
----
 dist: trusty
 sudo: required
 language: ruby
 rvm:
- - 2.4.1
+- 2.4.1
 before_install:
-  - lscpu
-  - sudo apt-get update
-  - sudo apt-get  install --yes qemu-system-x86 ipxe-qemu sshpass
+- lscpu
+- sudo apt-get update
+- sudo apt-get  install --yes qemu-system-x86 ipxe-qemu sshpass
 script:
-  - docker-compose up
-  - qemu-system-x86_64 -kernel build/vmlinuz -initrd build/initramfs -append 'console=ttyS0 net.ifnames=0 biosdevname=0 break=skip_loading_plugins' -m 2048 -smp 2 -display none -daemonize -net user,hostfwd=tcp::2222-:22 -net nic
-  - while ! nc -z 127.0.0.1 2222; do echo 'Waiting for Coinboot machine to listen on port 2222/SSH ...'; sleep 10; done
-  - while ! sshpass -p ubuntu ssh -o StrictHostKeyChecking=no -v -l ubuntu -p 2222 localhost grep -C 10 20180906 /etc/motd ; do echo 'Waiting for SSH login to succeed...'; sleep 10; done
+- docker-compose up
+- qemu-system-x86_64 -kernel build/coinboot-vmlinuz-4.4.0-133-generic -initrd build/coinboot-initramfs-4.4.0-133-generic
+  -append 'console=ttyS0 net.ifnames=0 biosdevname=0 break=skip_loading_plugins' -m
+  2048 -smp 2 -display none -daemonize -net user,hostfwd=tcp::2222-:22 -net nic
+- while ! nc -z 127.0.0.1 2222; do echo 'Waiting for Coinboot machine to listen on
+  port 2222/SSH ...'; sleep 10; done
+- while ! sshpass -p ubuntu ssh -o StrictHostKeyChecking=no -v -l ubuntu -p 2222 localhost
+  grep -C 10 20180906 /etc/motd ; do echo 'Waiting for SSH login to succeed...'; sleep
+  10; done
+after_sucess:
+- git config --global user.email "build@travis-ci.com"
+- git config --global user.name "Travis CI"
+- git tag -a "$(date +'%Y%m%d')"
+- git tag
+- git push "https://${API_KEY}github.com/${TRAVIS_REPO_SLUG}".git --tags
+deploy:
+  provider: releases
+  api_key:
+    secure: "XY4J7Nnr99yPfLyoaYQ9fBgam69QfUeSJ6d9EpHnXi3gjT7Llem5bEfLGN3Fc7qA1BU+Wq52VWMwtIr8qoBZF9iHg8Cr3dtJDduPiteuA24B3ejhYBFZV3hfDZTOgcMaZx/ibeZ+JtVjZT/7GFeBliaLGzoAy6JfT5HsO21bmNy1s/I5m27oX5yshrWD4W+xHnpnTMnSebaryXx52axXpCexy77bGnlBiJPd4NtyBSvkxytaUJCegR242+D6jQwiC3f2x56U7fhfnkw4ZYuP8JC8MKjOQ60O/8K+9WL8O5PN3h5/LoncEs7ynv3F/Yk1V+7KLzJvvqA6I0Dipf5VdpSCaT/5WNcAHZL1qIdu9HzYiyUw56nWougGkHXAgqpfI4AIyV4PuMo+ruZqA1slvAgj2P6V9XLQIAeQVRFE7jibhdin6HXRPTetERXZNBFE71bXoESUO+FRHP4LZt4M4+MDkteoAozaEX1mCvJ+1WMxFDC7dmFxJfUdtvaN5qPvg8OO5u7Nt1+zKOxb8qFTX/2NV9DOSgGsbS6I0HIxiaNeP1ieGoh5fVyJhQ1cS0zOnFVScu3ttVFiqSv8LNOVu0MrpmpZ1kwh5PAt8eVNJuAFbThtFKsSaVLS9fXn2DMIWOe2d2+ZbDA01uwnqc6SO50gzyslH2qGM2hlVmudKH4="
+  file_glob: true
+  file: build/*
+  skip_cleanup: true
+  on:
+    repo: frzb/coinboot-debirf
+    branch: master
+    tags: false
+env:
+  global:
+    secure: Yjlxrj6JldNllsNCwsS2KFPVZz7MtZjuN945r78v56+PB+GUUpaqCO80H3krBLwVCG6z9h7ojFO7Ymz5OLOpzpfJbn6h/TnPn/EXhS8FjCMqaRUUakkuPa8GOnYz56WjLbbFq7g6ICXSVpV2zR3F7tDbz8z5fiLEgipHeKIVAUqLh2AcKgi5BBINsEeCOZcBNrqGZnaWCrwFH8ksiCKNDGglPhVgbT25+RZCsqDoLQLe73vsRh0zKUQ7dB1IeVP7VIWLgELJ+Tw4ASD3ojUAXHw6pHUZsm7aEO9Bpthv17vHCeFFTHI5hjRSSkpSkkI0xLpYsNQGrX98+Ghc55DeYRn35HsgAtPEdKcFflOV4+ccAGQgDPd68zGa1yv15tH4Asras4XfK6kSOWXW6Fp5ZYEbon7klVlyEGrmHHbvaTUehtD4i0wE9KsJnEFsL3TaKUkiRNDE8MsRoq4p2Vtamvb2v9iswzaSnltGZm3JIrcmi0sKGX96v8oLLuL49B7LmISAxVd9MLrq4GoTBZs7JMz/jfqbuAsHK1J+vWWUHCPfkaon8EIyfk+7puP3tiN5XXXLBvddFl1hSNLbtCPpjoji0eR2nfI97RAWuC9oaFaRC4AdUGmz2tTFi7ixhaTOT5sQ9PvBt9Dh7yxY+onL0cl8HEnZAPIxC/DDUNI2zKw=
