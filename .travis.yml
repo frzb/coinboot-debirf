@@ -2,34 +2,31 @@ dist: trusty
 sudo: required
 language: ruby
 rvm:
-  - 2.4.1
-env:
-  global:
-    secure: "VZt+CJISaGH6gsRpUUk5RGs/734SDKLxxpXQj0TUxno9Mh3ptXfXvG+rnLrxlSRpWmO1FgxlrSULyGF5trOd8dhOYHrgw3vEvfgXyh66xcLRSFWa+yfMPRhUWkDjckNlirHP+jY7C7jKQvr9CDTVY7dcWm7n2CPhPVd9cgZq76ZH4+IAo11VLTFVN2EgS/tkHOovwzSR8q5rdalQwj/xvEQfOaUfm/nnW2tYtVrDc1i4CKj+R9QrbB3Ygh71ei8Whb+3mCI8YqLRC+TryaR0pdaMHrxvwKLElwbp5HjGWuK37cPgG5PbAOQ+xXSBDRmQ8jB4reGtbyHiLqBqtVin/YZ61T6u57OGwU2Sv4pg9Kd63x4b+HicqjNMJD7SLrJgNeKexxfHUEbA5G332xYsCV8mU8MLmkALZov6JMayKc3sEkQTpACXdk/2XUnVsSCcfb2wvrx12X+a+75Twq8e3W6OLpsQSuLdg31vMitASGnjweNqQvnv8RAmH59eztNrlHH73iNjuHG3P9d4XPNswN/otIeLyR6zffZjUAbMw+Zo9TR4/aH/7DrnyC7AHBy1+luQ6gC4uomFM4yxp0VLNJfLHdKzVVQIPfmGpa1beMm6ikwz1HRNjo6fItzXZXyaeQrQjpis2G4bP0ThRzhLuXn5dwp1MAWT4/bkgEQwHPs="
+- 2.4.1
 before_install:
-  - lscpu
-  - sudo apt-get update
-  - sudo apt-get  install --yes qemu-system-x86 ipxe-qemu sshpass
+- lscpu
+- sudo apt-get update
+- sudo apt-get  install --yes qemu-system-x86 ipxe-qemu sshpass
 script:
-  - docker-compose up
-  - qemu-system-x86_64 -kernel build/coinboot-vmlinuz-4.4.0-133-generic -initrd build/coinboot-initramfs-4.4.0-133-generic
-    -append 'console=ttyS0 net.ifnames=0 biosdevname=0 break=skip_loading_plugins' -m
-    2048 -smp 2 -display none -daemonize -net user,hostfwd=tcp::2222-:22 -net nic
-  - while ! nc -z 127.0.0.1 2222; do echo 'Waiting for Coinboot machine to listen on
-    port 2222/SSH ...'; sleep 10; done
-  - while ! sshpass -p ubuntu ssh -o StrictHostKeyChecking=no -v -l ubuntu -p 2222 localhost
-    grep -C 10 20180906 /etc/motd ; do echo 'Waiting for SSH login to succeed...'; sleep
-    10; done
+- docker-compose up
+- qemu-system-x86_64 -kernel build/coinboot-vmlinuz-4.4.0-133-generic -initrd build/coinboot-initramfs-4.4.0-133-generic
+  -append 'console=ttyS0 net.ifnames=0 biosdevname=0 break=skip_loading_plugins' -m
+  2048 -smp 2 -display none -daemonize -net user,hostfwd=tcp::2222-:22 -net nic
+- while ! nc -z 127.0.0.1 2222; do echo 'Waiting for Coinboot machine to listen on
+  port 2222/SSH ...'; sleep 10; done
+- while ! sshpass -p ubuntu ssh -o StrictHostKeyChecking=no -v -l ubuntu -p 2222 localhost
+  grep -C 10 20180906 /etc/motd ; do echo 'Waiting for SSH login to succeed...'; sleep
+  10; done
 after_sucess:
-  - git config --global user.email "build@travis-ci.com"
-  - git config --global user.name "Travis CI"
-  - git tag -a "$(date +'%Y%m%d')"
-  - git tag
-  - git push "https://${API_KEY}github.com/${TRAVIS_REPO_SLUG}".git --tags
+- git config --global user.email "build@travis-ci.com"
+- git config --global user.name "Travis CI"
+- git tag -a "$(date +'%Y%m%d')"
+- git tag
+- git push "https://${API_KEY}github.com/${TRAVIS_REPO_SLUG}".git --tags
 deploy:
   provider: releases
   api_key:
-    secure: "Ag8TMAk4uysrEfVWR4SihVuoNogjjiHRcRaTZCq5Sf2+uXEyoTm0AESvD+L8XyuxkkKmiwzeuR1hhG054b1ey3CBlXz6KzvGnGAnMmsOuQUXQnx4L6RE9yefw1h1tEgNMIwaKDnK44g+ZHAyBG31+Mqe8zJDGobidvrsFDZx2iYcpkevBXkFk24ohLhdU/VyeAUuVfJ76DMT4CbtPnkCOuaAjbaxj6YThi+Vk9SAUA+lwVJBDiP1AMOj3ho7wN0b6bmByWziJkNRohrdiikRkrSdMu8ku3FIWmuaMYWL3RFuARlNuAiaMlGj32Tcw4dQ2OYfcPCZo7ZzRtE81fau5zoBwGGw0K27WrdDJSfA0G8WtFJw74pre4YbtoPxdVlE2l8WtjvR2L8vHDHx4qp+qVUHtbvLvrbM2Rq6hBAhBUGNSGjGMWQCQFnrWkyyKM1SFxU44mCTT/HsOjT8yVa2gHA6jnLA6KCRhA0SW2hEv6EAuv/aUeJtuZBAtr04C3c1mLYiDMZSNN9PmGmJQjuJx7Ajo0ObXBxyy0LjCQRnS0iwfhirqMyC134tBQrHmKlh0nGTQiL2BHKKONlI0LArwCeE3JUE5HSSiD28o96Nh64xGQF3D97zyKgVW8X2GhU9GWeZfNQL9FOwInmIZTeuUYWdTIQqLz0tv+MH22T++Tk="
+    secure: lSWexaj+vgSM1EYuUB0qe0+VnKx4R8qtJqJ539zkf6g978bXntJ+47bxNJ32L52s7M766ngI05lU5ndfFQNVNhP0ul/tA36PbK+FRKWnjlOtrq+GqRq/VQc6mxg30ifH/Au9SzC73Vr1ud8KnhxgHhIEuZA8Uzo4dlugzzbz5YX7KKQb197RnFtyvwNzko40y0pfF2reRdYcl/5I1xdwNlONj30n5pwq4EDLBNZCXAvAvlvo263T0vBhBHWnMYyuyz3dlCoMBJrgMTNT7rmJ3ozm7OjLZflIQ/caaWZEADhbTl+LT2jRxYWBHmuHieHT2/3XOCtSJt+gfOkKQbiotP5Mveao4V7CZ0vBx/j/hd4tIZQ/UZWeEAKTk7QcfvFPHXKGbYxKOwpPgk1+qG/9mEtXwpgrifK7oJAEzfWX+lbiURSjkg0KYpddXRsxe95p9BchvJDhJzVCt/vN+JszebR7vRWuFwMQms9z9Rn2G0MvK7DeWemM+j+z0RGHLnUMHYF85mbK+L+Q62RRuSMU4oZDC01I/XVSOUZ+ii1854uzlHwR6G8xKz5PB7qTKrj3lGCLaZKNUK63lmdecXJOvstsNDJjclOemtMhlhW5JNRg9E+v36IdFugS6tTtYJgUPfLVHSJGVSIvPEYfhera2rYin1tFZaH7M3d/ot7WEXo=
   file_glob: true
   file: build/*
   skip_cleanup: true
