@@ -17,7 +17,7 @@ script:
 - while ! sshpass -p ubuntu ssh -o StrictHostKeyChecking=no -v -l ubuntu -p 2222 localhost
   grep -C 10 20180906 /etc/motd ; do echo 'Waiting for SSH login to succeed...'; sleep
   10; done
-after_sucess:
+after_success:
 - git config --global user.email "build@travis-ci.com"
 - git config --global user.name "Travis CI"
 - git tag -a "$(date +'%Y%m%d')"
@@ -32,4 +32,4 @@ deploy:
   skip_cleanup: true
   on:
     repo: frzb/coinboot-debirf
-    branch: master
+    branch: automatic_release
