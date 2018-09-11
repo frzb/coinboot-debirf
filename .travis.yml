@@ -21,7 +21,9 @@ after_success:
 - git config --global user.email "build@travis-ci.com"
 - git config --global user.name "Travis CI"
 - git tag -a "$(date +'%Y%m%d')" -m 'Automatic release by Travis CI'
+- git push origin --tags
 - git tag
+- git fetch origin
 deploy:
   provider: releases
   api_key:
