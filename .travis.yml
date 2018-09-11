@@ -22,7 +22,6 @@ after_success:
 - git config --global user.name "Travis CI"
 - git tag -a "$(date +'%Y%m%d')" -m 'Automatic release by Travis CI'
 - git tag
-- git push "https://${API_KEY}github.com/${TRAVIS_REPO_SLUG}".git --tags
 deploy:
   provider: releases
   api_key:
