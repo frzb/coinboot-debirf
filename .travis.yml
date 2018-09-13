@@ -17,19 +17,20 @@ script:
 - while ! sshpass -p ubuntu ssh -o StrictHostKeyChecking=no -v -l ubuntu -p 2222 localhost
   grep -C 10 20180906 /etc/motd ; do echo 'Waiting for SSH login to succeed...'; sleep
   10; done
-after_sucess:
+after_success:
 - git config --global user.email "build@travis-ci.com"
 - git config --global user.name "Travis CI"
-- git tag -a "$(date +'%Y%m%d')"
+- git tag -a "$(date +'%Y%m%d')" -m 'Automatic release by Travis CI'
+- git push "https://${TOKEN}@github.com/${TRAVIS_REPO_SLUG}".git --tags
+- git fetch origin
 - git tag
-- git push "https://${API_KEY}github.com/${TRAVIS_REPO_SLUG}".git --tags
 deploy:
   provider: releases
-  api_key:
-    secure: lSWexaj+vgSM1EYuUB0qe0+VnKx4R8qtJqJ539zkf6g978bXntJ+47bxNJ32L52s7M766ngI05lU5ndfFQNVNhP0ul/tA36PbK+FRKWnjlOtrq+GqRq/VQc6mxg30ifH/Au9SzC73Vr1ud8KnhxgHhIEuZA8Uzo4dlugzzbz5YX7KKQb197RnFtyvwNzko40y0pfF2reRdYcl/5I1xdwNlONj30n5pwq4EDLBNZCXAvAvlvo263T0vBhBHWnMYyuyz3dlCoMBJrgMTNT7rmJ3ozm7OjLZflIQ/caaWZEADhbTl+LT2jRxYWBHmuHieHT2/3XOCtSJt+gfOkKQbiotP5Mveao4V7CZ0vBx/j/hd4tIZQ/UZWeEAKTk7QcfvFPHXKGbYxKOwpPgk1+qG/9mEtXwpgrifK7oJAEzfWX+lbiURSjkg0KYpddXRsxe95p9BchvJDhJzVCt/vN+JszebR7vRWuFwMQms9z9Rn2G0MvK7DeWemM+j+z0RGHLnUMHYF85mbK+L+Q62RRuSMU4oZDC01I/XVSOUZ+ii1854uzlHwR6G8xKz5PB7qTKrj3lGCLaZKNUK63lmdecXJOvstsNDJjclOemtMhlhW5JNRg9E+v36IdFugS6tTtYJgUPfLVHSJGVSIvPEYfhera2rYin1tFZaH7M3d/ot7WEXo=
+  api_key: ${TOKEN}
   file_glob: true
   file: build/*
   skip_cleanup: true
   on:
     repo: frzb/coinboot-debirf
     branch: master
+    tags: true
