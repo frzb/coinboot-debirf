@@ -239,8 +239,8 @@ export PATH=/sbin:/usr/sbin:/bin:/usr/bin
 # Determine IP-address of HTTP-server that
 # delivers the plugin archives.
 # The server is the same as the one which provides the
-# boot image.
-HTTP_SERVER=$(echo $BOOT_IMAGE | cut -d/ -f3)
+# initramfs.
+HTTP_SERVER=$(grep -oE http:.[^\ ]+ /proc/cmdline | cut -d'/' -f 3)
 
 mkdir -p /dev /proc /sys /run
 # Mount the /proc and /sys filesystems.
