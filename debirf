@@ -236,12 +236,6 @@ EOF
 
 export PATH=/sbin:/usr/sbin:/bin:/usr/bin
 
-# Determine IP-address of HTTP-server that
-# delivers the plugin archives.
-# The server is the same as the one which provides the
-# initramfs.
-HTTP_SERVER=$(grep -oE http:.[^\ ]+ /proc/cmdline | cut -d'/' -f 3)
-
 mkdir -p /dev /proc /sys /run
 # Mount the /proc and /sys filesystems.
 mount -t proc none /proc
@@ -263,6 +257,13 @@ exec 2>/dev/console
 export LC_ALL=en_US.UTF-8
 export LANG=en_US.UTF-8
 export LANGUAGE=en_US.UTF-8
+
+
+# Determine IP-address of HTTP-server that
+# delivers the plugin archives.
+# The server is the same as the one which provides the
+# initramfs.
+HTTP_SERVER=$(grep -oE http:.[^\ ]+ /proc/cmdline | cut -d'/' -f 3)
 
 if (grep -q break=skip_loading_plugins /proc/cmdline); then
   echo 'Loading of Coinboot plugins skipped'
