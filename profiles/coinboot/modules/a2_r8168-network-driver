@@ -32,11 +32,6 @@ KERNEL_RELEASE=4.4.0-133-generic
 R8168_PACKAGE=r8168-dkms
 PACKAGES='linux-headers-4.4.0-133-generic'
 
-# The r8168-dkms package is in [universe] so we have to extend the sources.list.
-cat <<EOF >> "${DEBIRF_ROOT}/etc/apt/sources.list"
-deb http://de.archive.ubuntu.com/ubuntu xenial universe
-EOF
-
 # Update package list.
 debirf_exec apt-get update
 
