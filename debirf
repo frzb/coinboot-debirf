@@ -194,7 +194,7 @@ create_initrd_plugin() {
 # To extract the plugin archives in place
 # we need / to be run as tmpfs and not as rootfs with only öimited capacity.
 #
-# Caused by this We have to run init with twice but with separate scripts.
+# Caused by this We have to run init twice but with separate scripts.
 # 1. Minimal busybox based environment to extract
 #    the nested rootfs archive to a tmpfs.
 #    Then switch to new root tmpfs by run-init.
