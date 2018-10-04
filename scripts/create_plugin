@@ -1,4 +1,5 @@
 #!/bin/bash -e
+set -x
 
 # Copyright (C) 2018 Gunter Miegel coinboot.io
 #
@@ -25,6 +26,55 @@ INITIAL_DPKG_STATUS=/tmp/initial_status
 FINAL_DPKG_STATUS=/tmp/dpkg_status
 PID_FILE=/tmp/plugin_create_pid
 
+
+function start_fluffy {
+
+  sudo fluffy \
+    -O $OUTFILE \
+    -E /tmp/create_plugin_error.log &
+
+  PID=$!
+
+  echo "PID of the process watching for file changes is: $PID"
+
+  echo $PID > $PID_FILE
+
+  sudo fluffyctl \
+    --create \
+    --modify \
+    --delete \
+    --attrib \
+    --moved-from \
+    --moved-to \
+    --root-delete \
+    --root-move \
+    --close-write \
+    --queue-overflow \
+    -w / \
+    -i /proc \
+    -i /sys \
+    -i /dev \
+    -i /run \
+    -i /tmp \
+    -i /vagrant \
+    -i /var/log \
+    -i /var/lib/dpkg \
+    -w /var/lib/dpkg/info \
+    -i /var/cache
+
+  # Inotifywait takes some time to build up the recursive file watching on
+  # / - so we have to wait and verify that we only proceed after the prepations
+  # are done.
+  # while ! grep -q 'Watches established.' /tmp/plugin.log; do
+  #   echo -ne 'Waiting for file watching to be established...\r'
+  #   sleep 0.2
+  # done
+
+  cp -v $DPKG_STATUS $INITIAL_DPKG_STATUS
+
+  sleep 10
+}
+
 function start {
   # Inside a Docker container '/proc' is read-only, so we are skipping this step.
   if ! grep -q docker /proc/1/cgroup; then
@@ -36,12 +86,22 @@ function start {
   # TODO Also track deleted files
   # According to strace is looks like --exclude is not preventing building the
   # "watches" for the excluded directories but filters all file system events on them.
-  if [ $(which inotifywait) ]; then
-    sudo rm -f $OUTFILE
-    nohup sudo inotifywait -m -r --format '%w%f' -e create -e attrib -e moved_from -e moved_to -e modify --exclude $EXCLUDE -o $OUTFILE / > /tmp/plugin.log 2>&1 &
+  if [ $(which fswatch) ]; then
+    nohup sudo fswatch -x -r \
+      --event=Created \
+      --event=Updated \
+      --event=Removed \
+      --event=Renamed \
+      --event=OwnerModified \
+      --event=AttributeModified \
+      --event=MovedFrom \
+      --event=MovedTo \
+      --extended \
+      --exclude $EXCLUDE \
+      / > $OUTFILE 2> /tmp/create_plugin.log &
   else
-    echo 'inotifywait is missing.'
-    echo 'Please install the package inotify-tools'
+    echo 'fswatch is missing'
+    echo 'Please install the package fswatch'
     exit
   fi
 
@@ -54,10 +114,10 @@ function start {
   # Inotifywait takes some time to build up the recursive file watching on
   # / - so we have to wait and verify that we only proceed after the prepations
   # are done.
-  while ! grep -q 'Watches established.' /tmp/plugin.log; do
-    echo -ne 'Waiting for file watching to be established...\r'
-    sleep 0.2
-  done
+ # while ! grep -q 'Watches established.' /tmp/plugin.log; do
+ #   echo -ne 'Waiting for file watching to be established...\r'
+ #   sleep 0.2
+ # done
 
   cp $DPKG_STATUS $INITIAL_DPKG_STATUS
 }
@@ -72,7 +132,7 @@ function finish {
   # Test all collected files if they really exists and if so write them
   # to a final file list.
   # Finally add the dpkg_status file we create beforehand.
-  while read path; do
+  while read event path; do
     if [ -f "$path" ]; then
       echo $path
       echo $path >> "$OUTFILE_FINAL"
@@ -93,7 +153,7 @@ function upload {
 
 case "$1" in
   'start')
-  start
+  start_fluffy
   ;;
   'finish')
   finish $2
