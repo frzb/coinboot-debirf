@@ -1,0 +1,27 @@
+#!/bin/bash
+set -x
+
+range=$(echo {a..g})
+path=./recursive_inotify_test_directory
+logfile=recursive_inotify_test.log
+
+mkdir -p $path
+
+for i in $range; do
+  for j in $range; do
+    for k in $range; do
+      for l in $range; do
+        for m in $range; do
+          for n in $range; do
+            for o in $range; do
+              #mkdir -vp $path/$i/$j/$k | tee -a $logfile &
+              mkdir -vp $path/$i/$j/$k/$l/$m/$n/$o | tee -a $logfile &
+            done
+          done
+        done
+      done
+    done
+  done
+done
+
+
