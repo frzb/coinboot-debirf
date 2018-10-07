@@ -31,10 +31,10 @@ cat <<'EOF' > "${DEBIRF_ROOT}/etc/dhcp/dhclient-enter-hooks.d/dhcp_hostname"
 hostname $(echo $new_ip_address | sed 's/\./-/g')
 
 echo $(hostname) > /etc/hostname
+echo "127.0.1.1 $(hostname)" >> /etc/hosts
 EOF
 
 # Write /etc/hosts accordingly
 cat <<EOF > "${DEBIRF_ROOT}/etc/hosts"
-127.0.0.1	localhost
-127.0.1.1       localhost
+127.0.0.1 localhost
 EOF
