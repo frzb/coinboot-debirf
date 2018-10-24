@@ -1,0 +1,61 @@
+#!/bin/bash -e
+
+# Copyright (C) 2018 Gunter Miegel coinboot.io
+#
+# This file is part of Coinboot.
+# This software may be modified and distributed under the terms
+# of the MIT license.  See the LICENSE file for details.
+#
+# Please notice even while this script is licensed with the
+# MIT license the software packaged by this script may be licensed by
+# an other license with different terms and conditions.
+# You have to agree to the license of the packaged software to use it.
+
+
+# Creating two plugin archives with a recursive directroy structure using 
+# two different Inotify tools (inotifywait and fluffy) to watch for changes.
+# These archvies are later processed by a small test suite.
+# Main purpose of this to proof the correct behaviour of the used inotify tools.
+
+set -x
+
+range=$(echo {a..c})
+path=/opt/recursive_inotify_test
+logfile=/tmp/$(basename $0).log
+
+function recursive_mkdir {
+  for i in $range; do
+    for j in $range; do
+      for k in $range; do
+        mkdir -vp $(pwd)/$path/$i/$j/$k | sed 's/mkdir: created directory .//' | sed s/"'"// | tee -a $logfile
+      done
+    done
+  done
+
+  sleep 5
+}
+
+rm -v $logfile
+rm -rf $path
+mkdir -p $path
+
+create_plugin start
+
+recursive_mkdir
+
+create_plugin finish coinboot_$(basename $0)_inotifywait
+
+cp $logfile /opt/$(basename $0)_inotifywait.log
+
+rm -rf $path
+rm /opt/$(basename $0)_inotifywait.log
+
+create_plugin start_fluffy
+
+recursive_mkdir
+
+create_plugin finish coinboot_$(basename $0)_fluffy
+
+cp $logfile /opt/$(basename $0)_inotifywait.log
+
+rm -rf $path
