@@ -25,13 +25,21 @@ DPKG_STATUS=/var/lib/dpkg/status
 INITIAL_DPKG_STATUS=/tmp/initial_status
 FINAL_DPKG_STATUS=/tmp/dpkg_status
 PID_FILE=/tmp/plugin_create_pid
-
+FLUFFY_LOG_DIR=/opt/fluffy
+FLUFFY_LOG=$FLUFFY_LOG_DIR/fluffy.log
+FLUFFY_ERROR_LOG=$FLUFFY_LOG_DIR/fluffy_error.log
 
 function start_fluffy {
+  # FIXME: fluffy watches at the own outputfiles and ends up in
+  # some kind of infinite loop.
+  # So we are handling the output to files on our own for now.
+  #sudo fluffy \
+  #  -O $OUTFILE \
+  #  -E /tmp/create_plugin_error.log &
 
   sudo fluffy \
-    -O $OUTFILE \
-    -E /tmp/create_plugin_error.log &
+    -O /tmp/fluffy/fluffy.log \
+    -E /tmo/fluffy/fluffy_error.log &
 
   PID=$!
 
@@ -39,88 +47,101 @@ function start_fluffy {
 
   echo $PID > $PID_FILE
 
-  sudo fluffyctl \
-    --create \
-    --modify \
-    --delete \
-    --attrib \
-    --moved-from \
-    --moved-to \
-    --root-delete \
-    --root-move \
-    --close-write \
-    --queue-overflow \
-    -w / \
-    -i /proc \
-    -i /sys \
-    -i /dev \
-    -i /run \
-    -i /tmp \
-    -i /vagrant \
-    -i /var/log \
-    -i /var/lib/dpkg \
-    -w /var/lib/dpkg/info \
-    -i /var/cache
-
-  # Inotifywait takes some time to build up the recursive file watching on
-  # / - so we have to wait and verify that we only proceed after the prepations
-  # are done.
-  # while ! grep -q 'Watches established.' /tmp/plugin.log; do
-  #   echo -ne 'Waiting for file watching to be established...\r'
-  #   sleep 0.2
-  # done
-
   cp -v $DPKG_STATUS $INITIAL_DPKG_STATUS
 
-  sleep 10
-}
+  sudo rm -rf $FLUFFY_LOG_DIR
+  sudo mkdir -pv $FLUFFY_LOG_DIR
 
-function start {
-  # Inside a Docker container '/proc' is read-only, so we are skipping this step.
-  if ! grep -q docker /proc/1/cgroup; then
-    echo "200000" | sudo tee /proc/sys/fs/inotify/max_user_watches
-  fi
+  sudo fluffy \
+  -O $FLUFFY_LOG_ \
+  -E $FLUFFY_ERROR_LOG &
 
-  sudo rm -fv $OUTFILE $OUTFILE_FINAL $INITIAL_DPKG_STATUS $FINAL_DPKG_STATUS $PID_FILE
+  sudo fluffyctl \
+  --create \
+  --modify \
+  --delete \
+  --attrib \
+  --moved-from \
+  --moved-to \
+  --root-delete \
+  --root-move \
+  --close-write \
+  --queue-overflow \
+  -w /opt \
+  -i $FLUFFY_LOG_DIR \
+  -i /tmp \
+  -i /proc \
+  -i /sys \
+  -i /dev \
+  -i /run \
+  -i /vagrant \
+  -i /var/log \
+  -i /var/lib/dpkg \
+  -w /var/lib/dpkg/info \
+  -i /var/cache \
+  -w /
 
-  # TODO Also track deleted files
-  # According to strace is looks like --exclude is not preventing building the
-  # "watches" for the excluded directories but filters all file system events on them.
-  if [ $(which fswatch) ]; then
-    nohup sudo fswatch -x -r \
-      --event=Created \
-      --event=Updated \
-      --event=Removed \
-      --event=Renamed \
-      --event=OwnerModified \
-      --event=AttributeModified \
-      --event=MovedFrom \
-      --event=MovedTo \
-      --extended \
-      --exclude $EXCLUDE \
-      / > $OUTFILE 2> /tmp/create_plugin.log &
-  else
-    echo 'fswatch is missing'
-    echo 'Please install the package fswatch'
-    exit
-  fi
+  sudo mkdir -p /opt/ready 
+    # Inotifywait takes some time to build up the recursive file watching on
+    # / - so we have to wait and verify that we only proceed after the prepations
+    # are done.
+    while ! grep -q '/opt/ready' /opt/fluffy/fluffy.log; do
+       echo -ne 'Waiting for file watching to be established...\r'
+       sleep 0.2
+       sudo mkdir -p /opt/ready 
+    done
 
-  PID=$!
+    sleep 20
+    #echo '' > $OUTFILE
+    #sudo rm $OUTFILE
+    #sudo rm /tmp/create_plugin_error.log
+  }
 
-  echo "PID of the process watch for file changes is: $PID"
+  function start {
+    # Inside a Docker container '/proc' is read-only, so we are skipping this step.
+    if ! grep -q docker /proc/1/cgroup; then
+      echo "200000" | sudo tee /proc/sys/fs/inotify/max_user_watches
+    fi
 
-  echo $PID > $PID_FILE
+    sudo rm -fv $OUTFILE $OUTFILE_FINAL $INITIAL_DPKG_STATUS $FINAL_DPKG_STATUS $PID_FILE
 
-  # Inotifywait takes some time to build up the recursive file watching on
-  # / - so we have to wait and verify that we only proceed after the prepations
-  # are done.
- # while ! grep -q 'Watches established.' /tmp/plugin.log; do
- #   echo -ne 'Waiting for file watching to be established...\r'
- #   sleep 0.2
- # done
+    # TODO Also track deleted files
+    # According to strace is looks like --exclude is not preventing building the
+    # "watches" for the excluded directories but filters all file system events on them.
+    if [ $(which fswatch) ]; then
+      nohup sudo fswatch -x -r \
+        --event=Created \
+        --event=Updated \
+        --event=Removed \
+        --event=Renamed \
+        --event=OwnerModified \
+        --event=AttributeModified \
+        --event=MovedFrom \
+        --event=MovedTo \
+        --extended \
+        --exclude $EXCLUDE \
+        / > $OUTFILE 2> /tmp/create_plugin.log &
+    else
+      echo 'fswatch is missing'
+      echo 'Please install the package fswatch'
+      exit
+    fi
 
-  cp $DPKG_STATUS $INITIAL_DPKG_STATUS
-}
+    PID=$!
+
+    echo "PID of the process watch for file changes is: $PID"
+
+    echo $PID > $PID_FILE
+
+    # Inotifywait takes some time to build up the recursive file watching on
+    # / - so we have to wait and verify that we only proceed after the prepations
+    # are done.
+   # while ! grep -q 'Watches established.' /tmp/plugin.log; do
+   #   echo -ne 'Waiting for file watching to be established...\r'
+   #   sleep 0.2
+   # done
+
+  }
 
 function finish {
   plugin_name=$1
@@ -152,6 +173,9 @@ function upload {
 }
 
 case "$1" in
+  'start')
+  start
+  ;;
   'start')
   start_fluffy
   ;;
