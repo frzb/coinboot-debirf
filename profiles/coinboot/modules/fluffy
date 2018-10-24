@@ -1,0 +1,45 @@
+#!/bin/bash -e
+
+# debirf module: create_user
+
+# Copyright (C) 2018 Gunter Miegel coinboot.io
+#
+# This file is part of Coinboot.
+#
+# Coinboot is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
+
+
+# Compile and install fluffy
+
+set -x
+PACKAGES='build-essential git pkg-config libglib2.0-dev make'
+LIBGLIB2='libglib2.0-0'
+
+debirf_exec apt-get install --no-install-recommends --yes $LIBGLIB2 $PACKAGES 
+
+git clone https://github.com/tinkershack/fluffy.git $DEBIRF_ROOT/tmp/fluffy
+
+cd $DEBIRF_ROOT/tmp/fluffy
+
+# Repo has no tagged releases so using a specfic commit
+# to not compile against a moving target.
+git reset 9e967142c39848a4e686d47bd05f7c453d99da04
+
+debirf_exec bash -c 'cd /tmp/fluffy && make && sudo make install'
+
+sudo rm -rf $DEBIRF_ROOT/tmp/fluffy
+
+debirf_exec sudo apt-get purge --yes $PACKAGES
+
+debirf_exec sudo apt-get autoremove --yes
