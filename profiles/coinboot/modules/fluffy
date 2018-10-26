@@ -30,23 +30,26 @@ LIBGLIB2='libglib2.0-0'
 
 sudo apt-get install --no-install-recommends --yes $PACKAGES
 
-debirf_exec apt-get install --no-install-recommends --yes $LIBGLIB2 
+debirf_exec apt-get install --no-install-recommends --yes $LIBGLIB2
+
+which git
 
 git clone https://github.com/tinkershack/fluffy.git /tmp/fluffy
 
 cd /tmp/fluffy
 
+
 # Repo has no tagged releases so using a specfic commit
 # to not compile against a moving target.
 git reset 9e967142c39848a4e686d47bd05f7c453d99da04
 
-make 
+make
 
 # TODO: Fix install path so that we don't have to copy
 # the binaries in place
 sudo make install
 
-sudo cp -v /usr/bin/fluffy* $DEBIRF_ROOT/usr/bin/ 
+sudo cp -v /usr/bin/fluffy* $DEBIRF_ROOT/usr/bin/
 
 sudo rm -rf $DEBIRF_ROOT/tmp/fluffy
 
