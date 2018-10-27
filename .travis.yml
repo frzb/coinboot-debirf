@@ -9,6 +9,7 @@ before_install:
 - sudo apt-get  install --yes qemu-system-x86 ipxe-qemu sshpass
 script:
 - export VERSION=$TRAVIS_TAG
+- env
 - docker-compose up
 - qemu-system-x86_64 -kernel build/coinboot-vmlinuz-4.4.0-133-generic -initrd build/coinboot-initramfs-4.4.0-133-generic
   -append 'console=ttyS0 net.ifnames=0 biosdevname=0 break=skip_loading_plugins' -m
