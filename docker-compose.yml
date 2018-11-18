@@ -10,4 +10,5 @@ services:
     command: /bin/bash /mnt/create_rootfs_and_kernel
     environment:
       VERSION: $VERSION
+      DEBIRF_KERNEL: $DEBIRF_KERNEL
     privileged: true

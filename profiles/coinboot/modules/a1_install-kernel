@@ -1,4 +1,5 @@
 #!/bin/bash -e
+set -x
 
 # debirf module: a1_install-kernel
 
@@ -27,6 +28,9 @@ rm -rf "$DEBIRF_ROOT/lib/modules"
 
 # download/copy in kernel package
 if [ -z "$DEBIRF_KERNEL_PACKAGE" ] ; then
+  if [ -n "$DEBIRF_KERNEL" ]; then
+    KNAME=linux-image-$DEBIRF_KERNEL
+  else
     # determine kernel to install. assume arch of build host.
 
     # determine kernel arch.  need everything after the kernel version
@@ -37,26 +41,35 @@ if [ -z "$DEBIRF_KERNEL_PACKAGE" ] ; then
     # generic linux-image-ARCH package in the debirf root (since it
     # may be different than what is installed on the build host)
     # Use sort -V for natural sorting of version numbers.
-    # Temp disable because of regression with linux-image-4.4.0-131-generic
-    #KNAME=$(debirf_exec apt-cache show linux-image-"$KARCH" | grep '^Depends: ' | sed 's/^Depends: //' | tr ',' '\n' | tr -d ' ' | grep ^linux-image | sort -Vr | head -n1)
-    KNAME=linux-image-4.4.0-133-generic
+    KNAME=$(debirf_exec apt-cache show linux-image-"$KARCH" | grep '^Depends: ' | sed 's/^Depends: //' | tr ',' '\n' | tr -d ' ' | grep ^linux-image | sort -Vr | head -n1)
     # download only the desired kernel package for later dpkg
     # extraction.  this also downloads the kernel dependencies, but
     # they will not be installed, and the downloaded packages will all
     # be purged in the end by the clean-root module.  it would be nice
     # to just use "apt-get download", but that's only supported since
     # wheezy.
-    debirf_exec apt-get install -d -y "$KNAME"
+  fi
+  debirf_exec apt-get install -d -y "$KNAME"
+  # Attention: For a Kernel > 4.4 Ubuntu has kernel and modules are in separate packages.
+  if [[ $DEBIRF_KERNEL =~ '4.15' ]]; then 
+   debirf_exec apt-get install -d -y linux-modules-$DEBIRF_KERNEL
+  fi
 
 else
-    # install kernel deb if given at command line
-    cp "$DEBIRF_KERNEL_PACKAGE" "$DEBIRF_ROOT"/var/cache/apt/archives/
+  # install kernel deb if given at command line
+  cp "$DEBIRF_KERNEL_PACKAGE" "$DEBIRF_ROOT"/var/cache/apt/archives/
 fi
 
 KPKG=$(basename "$DEBIRF_ROOT"/var/cache/apt/archives/linux-image-*)
 
 echo "extracting kernel package $KPKG..."
 debirf_exec dpkg --extract /var/cache/apt/archives/"$KPKG" /
+
+if [[ $DEBIRF_KERNEL =~ '4.15' ]]; then 
+  MODPKG=$(basename "$DEBIRF_ROOT"/var/cache/apt/archives/linux-modules-*)
+  echo "extracting kernel module package $MODPKG..."
+  debirf_exec dpkg --extract /var/cache/apt/archives/"$MODPKG" /
+fi
 
 # install the module init tools, since they are needed for depmod
 # these are in kmod in current releases
