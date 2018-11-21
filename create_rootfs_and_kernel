@@ -17,6 +17,11 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
+# The Kernel to use is set by the environment variable DEBIRF_KERNEL
+# Don't mix this up with DEBIRF_KERNEL_PACKAGE which defines a locally available
+# Debian package to be used.
+#export DEBIRF_KERNEL=4.4.0-133-generic
+
 apt update
 apt install --yes debirf bc sudo
 
@@ -45,6 +50,9 @@ ln -fs /usr/bin/pigz /usr/local/bin/zcat
 # so we copy the debirf profile to /tmp
 cp -vr /mnt/profiles/coinboot /tmp
 
+# export variables of the debirf profile
+source /mnt/profiles/coinboot/debirf.conf
+
 which debirf
 
 ls -la /tmp
@@ -52,8 +60,8 @@ ls -la /tmp
 #Force a root build without fakeroot
 time debirf make -n --root-build --no-warning /tmp/coinboot
 
-cp -v /tmp/coinboot/vmlinuz* /mnt/build/coinboot-vmlinuz-4.4.0-133-generic
-cp -v /tmp/coinboot/*.cgz /mnt/build/coinboot-initramfs-4.4.0-133-generic
+cp -v /tmp/coinboot/vmlinuz* /mnt/build/coinboot-vmlinuz-$DEBIRF_KERNEL
+cp -v /tmp/coinboot/*.cgz /mnt/build/coinboot-initramfs-$DEBIRF_KERNEL
 
 sudo chmod -v 644 /mnt/build/*
 

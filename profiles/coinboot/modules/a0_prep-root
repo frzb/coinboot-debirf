@@ -76,5 +76,4 @@ sed -i 's/main/main restricted universe multiverse/g' "${DEBIRF_ROOT}/etc/apt/so
 
 # update/upgrade
 debirf_exec apt-get --yes --force-yes update
-# FIXME: Disable for now for pinning to an exact kernel version.
-#debirf_exec apt-get --yes --force-yes dist-upgrade
+debirf_exec apt-get --yes --force-yes dist-upgrade

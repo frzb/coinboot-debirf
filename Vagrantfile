@@ -39,6 +39,9 @@ ln -fs /usr/bin/pigz /usr/local/bin/gzip
 ln -fs /usr/bin/pigz /usr/local/bin/gunzip
 ln -fs /usr/bin/pigz /usr/local/bin/zcat
 
+# export variables of the debirf profile
+source /vagrant/profiles/coinboot/debirf.conf
+
 # FIXME: Setting variant=minbase shrink the rootfs archive by ~10M, but access over network and serial fails.
 # sudo sed -i 's#eval "/usr/sbin/debootstrap $OPTS"#eval "/usr/sbin/debootstrap --variant=minbase $OPTS"#' $(which debirf)
 
@@ -50,8 +53,8 @@ cp -vr /vagrant/profiles/coinboot /tmp
 #Force a root build without fakeroot
 time su - ubuntu -c 'sudo debirf make -n --root-build --no-warning /tmp/coinboot'
 
-sudo cp -v /tmp/coinboot/vmlinuz* /vagrant/build/vmlinuz
-sudo cp -v /tmp/coinboot/*.cgz /vagrant/build/initramfs
+sudo cp -v /tmp/coinboot/vmlinuz* /vagrant/build/coinboot-vmlinuz-$DEBIRF_KERNEL
+sudo cp -v /tmp/coinboot/*.cgz /vagrant/build/coinboot-initramfs-$DEBIRF_KERNEL
 
 sudo chmod -v 644 /vagrant/build/*
 
@@ -74,10 +77,11 @@ Vagrant.configure(2) do |config|
   # the reload-plugin.
   #config.vm.provision "shell", inline: 'apt update; apt dist-upgrade --yes'
   config.vm.provision "shell", inline: 'apt update; apt upgrade --yes'
-  config.vm.provision "shell", inline: 'apt install linux-image-4.4.0-133-generic --yes'
+  config.vm.provision "shell", inline: 'source /vagrant/profiles/coinboot/debirf.conf && apt install linux-image-$DEBIRF_KERNEL --yes'
   config.vm.provision :reload
   config.vm.provision "shell", inline: $make_kernel_and_rootfs
   # Dynamically allign number of core of the built VM with the host
   # to speed up things as much as possible.
   end
-end
+  end
+

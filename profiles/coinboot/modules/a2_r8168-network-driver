@@ -1,4 +1,5 @@
 #!/bin/bash -e
+set +x
 
 # debirf module: network-driver-r8168
 
@@ -28,12 +29,12 @@
 # B: Use the DKMS package with the sources for the r8168 module.
 # For now we go with B because the footprint and overhead seems to be smaller.
 
-KERNEL_RELEASE=4.4.0-133-generic
+KERNEL_RELEASE=$DEBIRF_KERNEL
 R8168_PACKAGE=r8168-dkms
-PACKAGES='linux-headers-4.4.0-133-generic'
+PACKAGES="linux-headers-$DEBIRF_KERNEL libelf-dev wget dkms"
 
 # Update package list.
-debirf_exec apt-get update
+debirf_exec sudo apt-get update
 
 # Proper chrooting is needed for building the module.
 # Error with debirf fakeroot:
@@ -42,7 +43,11 @@ sudo mount -o bind /dev "$DEBIRF_ROOT"/dev
 sudo mount -o bind /dev/pts "$DEBIRF_ROOT"/dev/pts
 sudo mount -t proc /proc "$DEBIRF_ROOT/"proc
 
-chroot "$DEBIRF_ROOT" apt-get install --yes "$PACKAGES" "$R8168_PACKAGE"
+chroot "$DEBIRF_ROOT" sudo apt-get install --yes $PACKAGES
+
+debirf_exec sudo wget http://mirrors.kernel.org/ubuntu/pool/universe/r/r8168/r8168-dkms_8.046.00-1_all.deb -P /tmp
+
+chroot "$DEBIRF_ROOT" dpkg -i /tmp/r8168-dkms_8.046.00-1_all.deb
 
 sudo umount "$DEBIRF_ROOT"/dev/pts
 sudo umount "$DEBIRF_ROOT"/dev
@@ -51,7 +56,7 @@ sudo umount "$DEBIRF_ROOT"/proc
 # Copy modules to /var/lib/modules - after we purges DKMS can not longer do this.
 # Afterwards we have to rebuilt the dependency map with depmod.
 # TODO: Put compiled module at a better place than the root of the module directory.
-sudo cp -v "$DEBIRF_ROOT"/var/lib/dkms/r8168/8.041.00/"$KERNEL_RELEASE"/x86_64/module/r8168.ko "$DEBIRF_ROOT"/lib/modules/"$KERNEL_RELEASE"
+sudo cp -v "$DEBIRF_ROOT"/var/lib/dkms/r8168/8.046.00/"$KERNEL_RELEASE"/x86_64/module/r8168.ko "$DEBIRF_ROOT"/lib/modules/"$KERNEL_RELEASE"
 
 # Purge installed packages of this modules to free up the space.
 
