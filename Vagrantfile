@@ -53,8 +53,8 @@ cp -vr /vagrant/profiles/coinboot /tmp
 #Force a root build without fakeroot
 time su - ubuntu -c 'sudo debirf make -n --root-build --no-warning /tmp/coinboot'
 
-sudo cp -v /tmp/coinboot/vmlinuz* /mnt/build/coinboot-vmlinuz-$DEBIRF_KERNEL
-sudo cp -v /tmp/coinboot/*.cgz /mnt/build/coinboot-initramfs-$DEBIRF_KERNEL
+sudo cp -v /tmp/coinboot/vmlinuz* /vagrant/build/coinboot-vmlinuz-$DEBIRF_KERNEL
+sudo cp -v /tmp/coinboot/*.cgz /vagrant/build/coinboot-initramfs-$DEBIRF_KERNEL
 
 sudo chmod -v 644 /vagrant/build/*
 
