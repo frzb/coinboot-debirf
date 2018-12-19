@@ -26,8 +26,9 @@ FINAL_DPKG_STATUS=/tmp/dpkg_status
 PID_FILE=/tmp/plugin_create_pid
 
 function start {
-  # Inside a Docker container '/proc' is read-only, so we are skipping this step.
-  if ! grep -q docker /proc/1/cgroup; then
+  # Inside a Docker/runc container '/proc' is read-only, so we are skipping this step.
+  # Running outside a container can be identified by the entries of /proc/1/cgroup ending with plain ':/'.
+  if grep -qP 'cpu.*:\/$' /proc/1/cgroup; then
     echo "200000" | sudo tee /proc/sys/fs/inotify/max_user_watches
   fi
 
