@@ -22,7 +22,7 @@
 
 # Add custom helper scripts of Coinboot to the base image.
 
-debirf_exec apt install inotify-tools curl wget --yes
+debirf_exec apt install inotify-tools curl wget python3-docopt --yes
 
 if [ -d /vagrant ]; then
   cp -v /vagrant/scripts/* "$DEBIRF_ROOT/usr/local/bin/"
