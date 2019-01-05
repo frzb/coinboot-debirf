@@ -80,7 +80,6 @@ def main(arguments):
                 valid_files.append(path)
 
         valid_files.append(FINAL_DPKG_STATUS)
-:w
 
         files_for_plugin_archive = []
 
