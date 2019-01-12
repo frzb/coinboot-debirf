@@ -44,9 +44,12 @@ EXCLUDE = ('/dev/',
            '/run/',
            '/sys/',
            '/tmp/',
+           '/usr/src',
+           '/usr/include',
            '/usr/share/dbus-1/system-services',
            '/vagrant',
            '/var/cache',
+           '/var/lib/apt/lists',
            '/var/lib/dpkg/[^info]',
            '/var/log',
            '.*__pycache__.*',
@@ -85,9 +88,17 @@ def main(arguments):
 
         tar = tarfile.open(arguments['<plugin_name>'] + ".tar.gz", "w:gz")
         for path in files_for_plugin_archive:
-            # We have to specify explicitly the file name in
-            # the archive to get an absolute path wit a leading '/'
-            tar.add(path, arcname=path)
+            # If a file was deleted which was in the lower directory
+            # a whiteout file is created in the upper directory.
+            # So we don't can look at the upper director to track the
+            # deletion of such files. Else we look if the file is there
+            # at the merged directory with 'os.path.exists()'.
+            if os.path.exists(path):
+                # We have to specfiy explictly the file name in
+                # the archive to get an absolute path wit a leading '/'
+                tar.add(path, arcname=path)
+            else:
+                print('Whiteout file from lower dir:', path)
         tar.close()
 
 
