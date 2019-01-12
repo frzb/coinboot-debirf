@@ -39,11 +39,11 @@ INITIAL_DPKG_STATUS = '/tmp/initial_status'
 FINAL_DPKG_STATUS = '/tmp/dpkg_status'
 PLUGIN_DIR = '/mnt/plugin/rootfs'
 
-EXCLUDE = ('/dev',
-           '/proc',
-           '/run',
-           '/sys',
-           '/tmp',
+EXCLUDE = ('/dev/',
+           '/proc/',
+           '/run/',
+           '/sys/',
+           '/tmp/',
            '/usr/share/dbus-1/system-services',
            '/vagrant',
            '/var/cache',
@@ -63,34 +63,31 @@ def find(path_to_walk):
             for file in files]
 
 def main(arguments):
-    print(arguments)
+    #print(arguments)
     if arguments['start']:
-         call(['cp', '-v', DPKG_STATUS, INITIAL_DPKG_STATUS])
+        call(['cp', '-v', DPKG_STATUS, INITIAL_DPKG_STATUS])
     elif arguments['finish']:
         f = open(FINAL_DPKG_STATUS, 'w')
-        call(['dpkg_status.py', '--old', 'INITIAL_DPKG_STATUS', '--new', 'DPKG_STATUS', '--diff'], stdout=f)
-
-        valid_files = []
-
-        for path in  find(PLUGIN_DIR):
-            if any(re.findall(pattern, path) for pattern in EXCLUDE):
-                print('Ignore:', path)
-            else:
-                print(' Valid:', path)
-                valid_files.append(path)
-
-        valid_files.append(FINAL_DPKG_STATUS)
+        call(['dpkg_status.py', '--old', INITIAL_DPKG_STATUS, '--new', DPKG_STATUS, '--diff'], stdout=f)
 
         files_for_plugin_archive = []
 
-        for path in valid_files:
-            cleaned_path = re.sub(PLUGIN_DIR, '/', path)
-            print(cleaned_path)
-            files_for_plugin_archive.append(cleaned_path)
+        for path in find(PLUGIN_DIR):
+            cleaned_path = re.sub(PLUGIN_DIR, '', path)
+            # FIXME: Switch to re.match() against path without PLUGIN_DIR prefix
+            if any(re.findall(pattern, cleaned_path) for pattern in EXCLUDE):
+                print('Excluded:', cleaned_path)
+            else:
+                print('Included:', cleaned_path)
+                files_for_plugin_archive.append(cleaned_path)
+
+        files_for_plugin_archive.append(FINAL_DPKG_STATUS)
 
         tar = tarfile.open(arguments['<plugin_name>'] + ".tar.gz", "w:gz")
         for path in files_for_plugin_archive:
-            tar.add(path)
+            # We have to specfiy explictly the file name in
+            # the archive to get an absolute path wit a leading '/'
+            tar.add(path, arcname=path)
         tar.close()
 
 
