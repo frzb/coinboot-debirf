@@ -252,6 +252,7 @@ exec 0</dev/console
 exec 1>/dev/console
 exec 2>/dev/console
 
+# FIXME: Don't use grep, test variable directly regarding existence.
 if (grep -q netconsole /proc/cmdline); then
   echo "Honoring netconsole kernel arg"
   echo "Starting remote logging via netconsole"
