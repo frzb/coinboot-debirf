@@ -242,6 +242,7 @@ EOF
 
 export PATH=/sbin:/usr/sbin:/bin:/usr/bin
 
+
 mkdir -p /dev /proc /sys /run
 # Mount the /proc and /sys filesystems.
 mount -t proc none /proc
@@ -252,11 +253,9 @@ exec 0</dev/console
 exec 1>/dev/console
 exec 2>/dev/console
 
-# FIXME: Don't use grep, test variable directly regarding existence.
-if (grep -q netconsole /proc/cmdline); then
-  echo "Honoring netconsole kernel arg"
-  echo "Starting remote logging via netconsole"
-  modprobe netconsole netconsole="${netconsole}"
+if (grep -q break=init2_top /proc/cmdline); then
+  echo "honoring break=init_top kernel arg"
+  /bin/sh
 fi
 
 # https://www.busybox.net/FAQ.html#job_control
@@ -285,6 +284,14 @@ else
     echo "Wait for network connectivity..."
     sleep 1
   done
+
+  # FIXME: Don't use grep, test variable directly regarding existence.
+  # Set up netconsole requires a working network stack.
+  if (grep -q netconsole /proc/cmdline); then
+    echo "Honoring netconsole kernel arg"
+    echo "Starting remote logging via netconsole"
+    modprobe -v netconsole netconsole="${netconsole}"
+  fi
 
   curl -s http://$HTTP_SERVER/environment/ | grep -v -Fe '[' -e ']' | cut -f 4 -d'"' | while read environment; do
     echo "Downloading environment: $environment"
