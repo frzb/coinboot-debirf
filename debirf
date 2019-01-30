@@ -207,24 +207,30 @@ create_initrd_plugin() {
 #!/bin/sh
 mkdir /proc
 mount -t proc proc /proc
+
 if (grep -q break=top /proc/cmdline); then
   echo "honoring break=top kernel arg"
   /bin/sh
 fi
+
 mkdir /newroot
 MEMSIZE=\$(free | grep 'Mem:' | awk '{ print \$2 }')
 mount -t tmpfs -o size=\${MEMSIZE}k,mode=0755 tmpfs /newroot
+
 if (grep -q break=preunpack /proc/cmdline); then
-  echo "honoring break=preunpack kernel arg"
+  echo "Honoring break=preunpack kernel arg"
   /bin/sh
 fi
+
 cd /newroot
 echo unpacking rootfs...
 gunzip - < /rootfs.cgz | cpio -i
+
 if (grep -q break=bottom /proc/cmdline); then
-  echo "honoring break=bottom kernel arg"
+  echo "Honoring break=bottom kernel arg"
   /bin/sh
 fi
+
 umount /proc
 echo running /init2...
 exec /bin/run-init /newroot /init2 < ./dev/console > ./dev/console
@@ -236,6 +242,7 @@ EOF
 
 export PATH=/sbin:/usr/sbin:/bin:/usr/bin
 
+
 mkdir -p /dev /proc /sys /run
 # Mount the /proc and /sys filesystems.
 mount -t proc none /proc
@@ -245,6 +252,11 @@ mount -t tmpfs -o noexec,nosuid,size=10%,mode=0755 tmpfs /run
 exec 0</dev/console
 exec 1>/dev/console
 exec 2>/dev/console
+
+if (grep -q break=init2_top /proc/cmdline); then
+  echo "honoring break=init_top kernel arg"
+  /bin/sh
+fi
 
 # https://www.busybox.net/FAQ.html#job_control
 #setsid sh -c 'exec sh </dev/tty1 >/dev/tty1 2>&1'
@@ -272,6 +284,14 @@ else
     echo "Wait for network connectivity..."
     sleep 1
   done
+
+  # FIXME: Don't use grep, test variable directly regarding existence.
+  # Set up netconsole requires a working network stack.
+  if (grep -q netconsole /proc/cmdline); then
+    echo "Honoring netconsole kernel arg"
+    echo "Starting remote logging via netconsole"
+    modprobe -v netconsole netconsole="${netconsole}"
+  fi
 
   curl -s http://$HTTP_SERVER/environment/ | grep -v -Fe '[' -e ']' | cut -f 4 -d'"' | while read environment; do
     echo "Downloading environment: $environment"
