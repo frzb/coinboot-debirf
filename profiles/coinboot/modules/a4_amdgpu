@@ -46,26 +46,45 @@ set -x
 # linux-modules-extra-4.15.0-*-generic
 # And there is no backuported module.
 
+# TODO: dependcies
+# /lib/modules/4.18.0-13-generic/kernel/drivers/iommu/amd_iommu_v2.ko
+# /lib/modules/4.18.0-13-generic/amd/amdkfd/
+
+
 KERNEL_RELEASE=$DEBIRF_KERNEL
 if [[ $DEBIRF_KERNEL =~ '4.18' ]]; then
   EXTRA_PACKAGE="linux-modules-extra-$KERNEL_RELEASE"
+  FIRMWARE_PACKAGE="linux-firmware"
 fi
 EXTRA_PACKAGE_FILE=$(debirf_exec apt-cache show $EXTRA_PACKAGE | grep -oP $EXTRA_PACKAGE.*deb)
+# There are two linux-firmware packages available.
+# One over 'cosmic-main' and a more recent one over 'cosmic-updates'.
+# Using 'head -1' to pick the more recent one.
+FIRMWARE_PACKAGE_FILE=$(debirf_exec apt-cache show $FIRMWARE_PACKAGE | grep -oP $FIRMWARE_PACKAGE.*deb | head -1)
 AMD_PATH="/lib/modules/$KERNEL_RELEASE/kernel/drivers/gpu/drm/amd"
+IOMMU_V2="/lib/modules/$KERNEL_RELEASE/kernel/drivers/iommu/amd_iommu_v2.ko"
+GPU_SCHED="/lib/modules/$KERNEL_RELEASE/kernel/drivers/gpu/drm/scheduler/gpu-sched.ko"
+AMD_FIRMWARE="/lib/firmware/amdgpu/"
+
 
 # TODO: Download to /tmp in the first place.
 debirf_exec apt-get update
 
-debirf_exec apt-get download "$EXTRA_PACKAGE"
+debirf_exec apt-get download "$EXTRA_PACKAGE" "$FIRMWARE_PACKAGE"
 
 # FIXME: Remove the hardwired deb file.
 # dpkg-deb -x needs a full path!
 debirf_exec dpkg -x /$EXTRA_PACKAGE_FILE /tmp/amd/
+debirf_exec dpkg -x /$FIRMWARE_PACKAGE_FILE /tmp/firmware
 
-debirf_exec rm -rf /$EXTRA_PACKAGE_FILE
+debirf_exec rm -rvf /$EXTRA_PACKAGE_FILE /$FIRMWARE_PACKAGE
 
-# TODO: Put the i915_bpo module at a better place than the root of the module directory.
-debirf_exec cp -rv "/tmp/amd/$AMD_PATH" "/lib/modules/$KERNEL_RELEASE"
+debirf_exec cp -rv "/tmp/amd/$AMD_PATH" "$AMD_PATH"
+debirf_exec install -vD "/tmp/amd/$IOMMU_V2" "$IOMMU_V2"
+debirf_exec install -vD "/tmp/amd/$GPU_SCHED" "$GPU_SCHED"
+debirf_exec install -vD "/tmp/firmware/$AMD_FIRMWARE" "$AMD_FIRMWARE"
 
 # Clean up the directories extracted from the extra package.
-debirf_exec rm -rf /tmp/amd
+debirf_exec rm -rvf /tmp/amd /tmp/firmware
+
+chroot /tmp/coinboot/root depmod -a $KERNEL_RELEASE
