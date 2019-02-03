@@ -77,3 +77,10 @@ sed -i 's/main/main restricted universe multiverse/g' "${DEBIRF_ROOT}/etc/apt/so
 # update/upgrade
 debirf_exec apt-get --yes --force-yes update
 debirf_exec apt-get --yes --force-yes dist-upgrade
+
+
+# FIXME: Guess - debootstrap detects in newer version if it is running
+# inside a container and is skipping the creation of /dev/console
+# which leads to a kernel panic during boot
+# Related to?: https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=872059
+mknod -m 600 ${DEBIRF_ROOT}/dev/console c 5 1
