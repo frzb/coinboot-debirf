@@ -47,9 +47,7 @@ set -x
 # And there is no backuported module.
 
 KERNEL_RELEASE=$DEBIRF_KERNEL
-# FIXME: Make it work for 4.15 again
-#if [[ $DEBIRF_KERNEL =~ '4.15' ]]; then
-if [[ $DEBIRF_KERNEL =~ '4.18' ]]; then
+if ! [[ $DEBIRF_KERNEL =~ '4.4' ]]; then
   EXTRA_PACKAGE="linux-modules-extra-$KERNEL_RELEASE"
 else
   EXTRA_PACKAGE="linux-image-extra-$KERNEL_RELEASE"
