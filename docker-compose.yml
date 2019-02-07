@@ -11,4 +11,5 @@ services:
     environment:
       VERSION: $VERSION
       DEBIRF_KERNEL: $KERNEL
+      DEBIRF_SUITE: $SUITE
     privileged: true
