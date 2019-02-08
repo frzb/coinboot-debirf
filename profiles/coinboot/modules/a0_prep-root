@@ -83,4 +83,4 @@ debirf_exec apt-get --yes --force-yes dist-upgrade
 # inside a container and is skipping the creation of /dev/console
 # which leads to a kernel panic during boot
 # Related to?: https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=872059
-mknod -m 600 ${DEBIRF_ROOT}/dev/console c 5 1
+[[ -c ${DEBIRF_ROOT}/dev/console ]] || mknod -m 600 ${DEBIRF_ROOT}/dev/console c 5 1
