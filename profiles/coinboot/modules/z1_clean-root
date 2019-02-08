@@ -16,11 +16,15 @@
 #
 # Copyright (C) 2018 Gunter Miegel coinboot.io
 
-# remove all cached apt information
-debirf_exec apt-get --assume-yes --purge autoremove
-
 # Additional packages which can be removed to save space.
-debirf_exec apt purge --yes linux-headers-* gcc cpp-5 libgcc-5-dev file libmagic1
+#debirf_exec apt-get purge --yes linux-headers-* libgcc1 gcc cpp-5 libgcc-5-dev cpp-6 cpp-8 libc6-dev gcc-8 libgcc-8-dev file libmagic1
+debirf_exec apt-get purge --yes linux-headers-* gcc cpp* libgcc-*-dev lib*dev file libmagic1
+
+# Do the autoremove dance
+debirf_exec apt-get --yes --purge autoremove
+
+# remove all cached apt information
+debirf_exec apt-get clean
 
 # Remove documentation and take care the dpkg is excluding handling
 # of any documentation files.
@@ -39,15 +43,14 @@ EOF
 
 # Remove documentation.
 # We need to keep copyright files for legal reasons
-debirf_exec find /usr/share/doc -depth -type f ! -name copyright|xargs rm || true
-debirf_exec find /usr/share/doc -empty|xargs rmdir || true
+debirf_exec find /usr/share/doc -depth -type f ! -name copyright|xargs sudo rm || true
+debirf_exec find /usr/share/doc -empty|xargs sudo rmdir || true
 debirf_exec rm -rf /usr/share/man/* /usr/share/groff/* /usr/share/info/*
 debirf_exec rm -rf /usr/share/lintian/* /usr/share/linda/* /var/cache/man/*
 
 # Remove Python object bytecode cache.
-rm  -rf "$DEBIRF_ROOT/usr/lib/python3.5/__pycache__"
+rm  -rf "$DEBIRF_ROOT/usr/lib/python*/__pycache__"
 
-debirf_exec apt-get clean
 rm -f "$DEBIRF_ROOT/var/cache/apt/"*.bin
 rm -rf "$DEBIRF_ROOT/var/lib/apt/lists/"*
 mkdir "$DEBIRF_ROOT/var/lib/apt/lists/partial"
