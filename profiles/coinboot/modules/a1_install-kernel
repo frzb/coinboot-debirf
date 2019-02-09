@@ -51,7 +51,7 @@ if [ -z "$DEBIRF_KERNEL_PACKAGE" ] ; then
   fi
   debirf_exec apt-get install -d -y "$KNAME"
   # Attention: For a Kernel > 4.4 Ubuntu has kernel and modules are in separate packages.
-  if [[ $DEBIRF_KERNEL =~ '4.15' ]]; then 
+  if ! [[ $DEBIRF_KERNEL =~ '4.4' ]]; then
    debirf_exec apt-get install -d -y linux-modules-$DEBIRF_KERNEL
   fi
 
@@ -65,7 +65,7 @@ KPKG=$(basename "$DEBIRF_ROOT"/var/cache/apt/archives/linux-image-*)
 echo "extracting kernel package $KPKG..."
 debirf_exec dpkg --extract /var/cache/apt/archives/"$KPKG" /
 
-if [[ $DEBIRF_KERNEL =~ '4.15' ]]; then 
+if ! [[ $DEBIRF_KERNEL =~ '4.4' ]]; then
   MODPKG=$(basename "$DEBIRF_ROOT"/var/cache/apt/archives/linux-modules-*)
   echo "extracting kernel module package $MODPKG..."
   debirf_exec dpkg --extract /var/cache/apt/archives/"$MODPKG" /

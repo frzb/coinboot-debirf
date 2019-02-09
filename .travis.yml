@@ -4,8 +4,8 @@ language: ruby
 rvm:
 - 2.4.1
 env:
-  - KERNEL=4.15.0-39-generic
   - KERNEL=4.15.0-43-generic
+  - KERNEL=4.15.0-45-generic
 before_install:
 - lscpu
 - sudo apt-get update

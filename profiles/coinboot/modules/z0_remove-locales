@@ -17,6 +17,4 @@ find usr/share/locale -maxdepth 1 -mindepth 1 -type d ! -iname 'en*' -execdir rm
 
 debirf_exec echo 'en_US.UTF-8 UTF-8' > /etc/locale.gen
 debirf_exec echo 'LANG="en_US.UTF-8"' > /etc/default/locale
-debirf_exec locale-gen en en_US en_US.UTF-8
-debirf_exec dpkg-reconfigure --frontend=noninteractive locales
-debirf_exec  update-locale LANG=en_US.UTF-8
+debirf_exec locale-gen

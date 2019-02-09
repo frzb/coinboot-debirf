@@ -1,4 +1,5 @@
-#!/bin/sh -e
+#!/bin/bash -e
+set -x
 
 # debirf module: network
 # setup default network interface configuration
@@ -13,6 +14,10 @@
 #
 # Copyright (C) 2018 Gunter Miegel coinboot.io
 
+# Cosmic is missing the 'ifupdown' out of the box
+# which leads to a unconfigured NIC in early userspace.
+debirf_exec apt update
+debirf_exec apt install --yes ifupdown
 
 # reset default udev persistent-net rule
 rm -f "${DEBIRF_ROOT}"/etc/udev/rules.d/*_persistent-net.rules

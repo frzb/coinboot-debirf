@@ -1,4 +1,5 @@
 #!/bin/bash -e
+set -x
 
 # debirf module: a3_i915_bpo
 
@@ -46,13 +47,13 @@
 # And there is no backuported module.
 
 KERNEL_RELEASE=$DEBIRF_KERNEL
-if [[ $DEBIRF_KERNEL =~ '4.15' ]]; then
+if ! [[ $DEBIRF_KERNEL =~ '4.4' ]]; then
   EXTRA_PACKAGE="linux-modules-extra-$KERNEL_RELEASE"
 else
   EXTRA_PACKAGE="linux-image-extra-$KERNEL_RELEASE"
   MODULE_I915_BPO_PACKAGE_PATH="/lib/modules/$KERNEL_RELEASE/kernel/ubuntu/i915/i915_bpo.ko"
 fi
-EXTRA_PACKAGE_FILE=$(apt-cache show $EXTRA_PACKAGE | grep -oP $EXTRA_PACKAGE.*deb)
+EXTRA_PACKAGE_FILE=$(debirf_exec apt-cache show $EXTRA_PACKAGE | grep -oP $EXTRA_PACKAGE.*deb)
 MODULE_I915_PACKAGE_PATH="/lib/modules/$KERNEL_RELEASE/kernel/drivers/gpu/drm/i915/i915.ko"
 
 # TODO: Download to /tmp in the first place.
