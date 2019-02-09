@@ -42,8 +42,8 @@ EOF
 
 # Remove documentation. (~6MB)
 # We need to keep copyright files for legal reasons
-debirf_exec find /usr/share/doc -depth -type f ! -name copyright -delete -print
-debirf_exec find /usr/share/doc -empty -delete -print
+debirf_exec find /usr/share/doc -depth -type f ! -name copyright -delete #-print
+debirf_exec find /usr/share/doc -empty -delete #-print
 debirf_exec rm -rf /usr/share/man/* /usr/share/groff/* /usr/share/info/*
 debirf_exec rm -rf /usr/share/lintian/* /usr/share/linda/* /var/cache/man/*
 
