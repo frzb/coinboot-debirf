@@ -1,5 +1,4 @@
 #!/bin/bash -e
-
 # debirf module: clean-root
 # clean up debirf root
 #
@@ -41,18 +40,18 @@ path-exclude /usr/share/lintian/*
 path-exclude /usr/share/linda/*
 EOF
 
-# Remove documentation.
+# Remove documentation. (~6MB)
 # We need to keep copyright files for legal reasons
-debirf_exec find /usr/share/doc -depth -type f ! -name copyright|xargs sudo rm || true
-debirf_exec find /usr/share/doc -empty|xargs sudo rmdir || true
+debirf_exec find /usr/share/doc -depth -type f ! -name copyright -delete -print
+debirf_exec find /usr/share/doc -empty -delete -print
 debirf_exec rm -rf /usr/share/man/* /usr/share/groff/* /usr/share/info/*
 debirf_exec rm -rf /usr/share/lintian/* /usr/share/linda/* /var/cache/man/*
 
 # Remove Python object bytecode cache.
 rm  -rf "$DEBIRF_ROOT/usr/lib/python*/__pycache__"
 
-rm -f "$DEBIRF_ROOT/var/cache/apt/"*.bin
-rm -rf "$DEBIRF_ROOT/var/lib/apt/lists/"*
+rm -f "$DEBIRF_ROOTx/var/cache/apt/*.bin"
+rm -rf "$DEBIRF_ROOT/var/lib/apt/lists/*"
 mkdir "$DEBIRF_ROOT/var/lib/apt/lists/partial"
 
 # remake proc directory
