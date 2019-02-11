@@ -290,7 +290,10 @@ else
   if (grep -q netconsole /proc/cmdline); then
     echo "Honoring netconsole kernel arg"
     echo "Starting remote logging via netconsole"
-    modprobe -v netconsole netconsole="${netconsole}"
+    # Determine the MAC address of the logserver which has the same IP address as the our HTTP-server.
+    # For that we look up the IP address in the ARP table.
+    MAC_LOGSERVER=$(awk -v ip=$HTTP_SERVER '$0~ip {print $4}' /proc/net/arp)
+    modprobe -v netconsole netconsole="${netconsole}/$MAC_LOGSERVER"
   fi
 
   curl -s http://$HTTP_SERVER/environment/ | grep -v -Fe '[' -e ']' | cut -f 4 -d'"' | while read environment; do
