@@ -1,4 +1,4 @@
-a!/bin/bash -e
+!/bin/bash -e -o pipefail
 
 # debirf: script to build debirf system.
 #
@@ -185,7 +185,7 @@ create_initrd_plugin() {
 
     # copy in busybox-static from root, and link executables
     #cp -f "$DEBIRF_ROOT"/bin/busybox "$NEST_ROOT"/bin/
-    for util in awk cpio free grep gunzip ls mkdir mount rm sh sleep umount modprobe mkfs.ext2 depmod; do
+    for util in awk cpio cat free grep gunzip ls mkdir mount rm sh sleep umount modprobe mkfs.ext2 depmod; do
 	ln "$NEST_ROOT"/bin/busybox "$NEST_ROOT"/bin/"$util"
     done
 
@@ -193,8 +193,9 @@ create_initrd_plugin() {
     cp -f /usr/lib/klibc/bin/run-init "$NEST_ROOT"/bin/
     cp -f /lib/klibc-* "$NEST_ROOT"/lib/
 
-    # copy in the module for ZRAM
+    # Copy in the modules for ZRAM and for Zstandard
     # We need an recent package list to determine the following variables
+    set -x
     debirf_exec apt-get update
     local KERNEL_VERS=$(ls -1 "${DEBIRF_ROOT}/lib/modules" | head -n1)
     local EXTRA_PACKAGE="linux-modules-extra-$KERNEL_VERS"
@@ -205,6 +206,13 @@ create_initrd_plugin() {
     install -vD "$DEBIRF_ROOT/tmp/zram$ZRAM_MODULE" "$NEST_ROOT"/"$ZRAM_MODULE"
     debirf_exec rm -rf EXTRA_PACKAGE_ARCHIVE /tmp/zram
 
+/lib/modules/4.18.0-15-generic/kernel/lib/zstd/zstd_compress.ko
+    local ZSTD_MODULE=/lib/modules/${KERNEL_VERS}/kernel/crypto/zstd.ko
+    install -vD "$DEBIRF_ROOT/$ZSTD_MODULE" "$NEST_ROOT"/"$ZSTD_MODULE"
+
+    local ZSTD_COMPRESS_MODULE=/lib/modules/${KERNEL_VERS}/kernel/lib/zstd/zstd_compress.ko
+    install -vD "$DEBIRF_ROOT/$ZSTD_COMPRESS_MODULE" "$NEST_ROOT"/"$ZSTD_COMPRESS_MODULE"
+    
     # symlink /lib64 if that is done on host
     # FIXME: is this necessary?
     if [ -L /lib64 ] && [ $(readlink /lib64) = /lib ] ; then
@@ -249,11 +257,19 @@ if (grep -q zram /proc/cmdline); then
   echo "honoring zram kernel arg"
   depmod
   modprobe -v  zram
+  modprobe -v  zstd
+  cat /proc/crypto
   while ! [ -f /sys/block/zram0/disksize ]; do
-    echo "Waitinfg for /dev/zram0 to be ready..."
+    echo "Waiting for /dev/zram0 to be ready..."
     /bin/sleep 1
   done
   echo zstd > /sys/block/zram0/comp_algorithm
+  while ! grep '\[zstd\]' /sys/block/zram0/comp_algorithm; do
+    echo "Waiting for /dev/zram0 switching to use zstd..."
+    /bin/sleep 1
+  done
+  sleep 10
+  cat /sys/block/zram0/max_comp_streams
   echo \${MEMSIZE}k > /sys/block/zram0/disksize
   mkfs.ext2 -b 4096 /dev/zram0
   mount -t ext2 -o discard,noatime,diratime /dev/zram0 /newroot
