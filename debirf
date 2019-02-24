@@ -43,7 +43,6 @@ export DEVICE_ARCHIVE=${DEVICE_ARCHIVE:-/usr/share/debirf/devices.tar.gz}
 
 # list of packages to include in debootstrap
 export INCLUDE=\
-busybox-static,\
 gpgv,\
 less
 
@@ -173,12 +172,14 @@ create_initrd_plugin() {
     rm -rf "$NEST_ROOT"
     mkdir -p "$NEST_ROOT"/{bin,lib}
 
-
-    set -x
+    # Ubuntu busybox is lacking mkfs.ext2 which we need for using zram.
+    # We have to use an upstream binary of busybox
+    # https://busybox.net/downloads/binaries/1.30.0-i686/busybox
     wget https://busybox.net/downloads/binaries/1.30.0-i686/busybox -P /tmp
     echo "5776b1f4fbff641eb09024483fde28467e81bc74118c0c65ce5a8ad7a1029063  /tmp/busybox" | sha256sum --check
     mv /tmp/busybox "$NEST_ROOT"/bin/
     chmod -v a+x "$NEST_ROOT"/bin/busybox
+
     # copy in busybox-static from root, and link executables
     #cp -f "$DEBIRF_ROOT"/bin/busybox "$NEST_ROOT"/bin/
     for util in awk cpio free grep gunzip ls mkdir mount rm sh sleep umount modprobe mkfs.ext2 depmod; do
@@ -200,7 +201,6 @@ create_initrd_plugin() {
     debirf_exec dpkg -x $EXTRA_PACKAGE_ARCHIVE /tmp/zram
     install -vD "$DEBIRF_ROOT/tmp/zram$ZRAM_MODULE" "$NEST_ROOT"/"$ZRAM_MODULE"
     debirf_exec rm -rf EXTRA_PACKAGE_ARCHIVE /tmp/zram
-    set +x
 
     # symlink /lib64 if that is done on host
     # FIXME: is this necessary?
@@ -225,7 +225,6 @@ create_initrd_plugin() {
     cat > "$NEST_ROOT"/init <<EOF
 #!/bin/sh
 mkdir -p -v /proc /sys /dev
-ls -la
 mount -t proc proc /proc
 mount -t sysfs none /sys
 mount -t devtmpfs -o nosuid,mode=0755 udev /dev
@@ -235,11 +234,8 @@ if (grep -q break=top /proc/cmdline); then
   /bin/sh
 fi
 
-
-
 MEMSIZE=\$(free | grep 'Mem:' | awk '{ print \$2 }')
 mkdir /newroot
-
 
 # TODO: Try zstd as compression algorithm
 # TODO: Find out of using "mem_limit' makes sense
@@ -248,7 +244,6 @@ mkdir /newroot
 if (grep -q zram /proc/cmdline); then
   set -x
   echo "honoring zram kernel arg"
-  depmod -n
   depmod
   modprobe -v  zram
   while ! [ -f /sys/block/zram0/disksize ]; do
@@ -256,12 +251,9 @@ if (grep -q zram /proc/cmdline); then
     /bin/sleep 1
   done
   echo \${MEMSIZE}k > /sys/block/zram0/disksize
-  #echo \$MEMSIZE > /sys/block/zram0/disksize
-  # FIXME Ubuntu busybox is lacking mkfs.ext2
-  # We have to use an upstream binary of busybox
-  # https://busybox.net/downloads/binaries/1.30.0-i686/busybox
+  echo zstd > /sys/block/zram0/comp_algorithm
   mkfs.ext2 -b 4096 /dev/zram0
-  mount -t ext2 /dev/zram0 /newroot
+  mount -t ext2 -o discard,noatime,diratime /dev/zram0 /newroot
 else
   mount -t tmpfs -o size=\${MEMSIZE}k,mode=0755 tmpfs /newroot
 fi
