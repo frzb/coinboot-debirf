@@ -18,6 +18,10 @@ a!/bin/bash -e
 
 CMD=$(basename $0)
 
+# Upstream Busybox
+BUSYBOX=1.30.0-i686
+BUSYBOX_SHA256=5776b1f4fbff641eb09024483fde28467e81bc74118c0c65ce5a8ad7a1029063
+
 DEBIRF_COMMON=${DEBIRF_COMMON:-/usr/share/debirf/common}
 source "$DEBIRF_COMMON"
 
@@ -172,11 +176,10 @@ create_initrd_plugin() {
     rm -rf "$NEST_ROOT"
     mkdir -p "$NEST_ROOT"/{bin,lib}
 
-    # Ubuntu busybox is lacking mkfs.ext2 which we need for using zram.
+    # Ubuntu busybox is lacking mkfs.ext2 which we need for using zram
     # We have to use an upstream binary of busybox
-    # https://busybox.net/downloads/binaries/1.30.0-i686/busybox
-    wget https://busybox.net/downloads/binaries/1.30.0-i686/busybox -P /tmp
-    echo "5776b1f4fbff641eb09024483fde28467e81bc74118c0c65ce5a8ad7a1029063  /tmp/busybox" | sha256sum --check
+    wget https://busybox.net/downloads/binaries/${BUSYBOX}/busybox -P /tmp
+    echo "$BUSYBOX_SHA256 /tmp/busybox" | sha256sum --check
     mv /tmp/busybox "$NEST_ROOT"/bin/
     chmod -v a+x "$NEST_ROOT"/bin/busybox
 
@@ -250,8 +253,8 @@ if (grep -q zram /proc/cmdline); then
     echo "Waitinfg for /dev/zram0 to be ready..."
     /bin/sleep 1
   done
-  echo \${MEMSIZE}k > /sys/block/zram0/disksize
   echo zstd > /sys/block/zram0/comp_algorithm
+  echo \${MEMSIZE}k > /sys/block/zram0/disksize
   mkfs.ext2 -b 4096 /dev/zram0
   mount -t ext2 -o discard,noatime,diratime /dev/zram0 /newroot
 else
