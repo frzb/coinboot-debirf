@@ -1,8 +1,9 @@
+---
 dist: trusty
 sudo: required
 language: ruby
 rvm:
-- 2.4.1
+  - 2.4.1
 env:
   - KERNEL=4.15.0-43-generic
   - KERNEL=4.15.0-45-generic
@@ -10,39 +11,41 @@ jobs:
   include:
     stage: "Build"
     before_install:
-    - lscpu
-    - sudo apt-get update
-    - sudo apt-get  install --yes qemu-system-x86 ipxe-qemu sshpass
+      - lscpu
+      - sudo apt-get update
+      - sudo apt-get  install --yes qemu-system-x86 ipxe-qemu sshpass
     script:
-    - export VERSION=$(git describe --abbrev=0 --tags)
-    - echo $VERSION
-    - docker-compose up
+      - export VERSION=$(git describe --abbrev=0 --tags)
+      - echo $VERSION
+      - docker-compose up
     stage: "Run with / on tmpfs"
-    - qemu-system-x86_64 -kernel build/coinboot-vmlinuz-${KERNEL} -initrd build/coinboot-initramfs-${KERNEL}
-      -append 'console=ttyS0 netconsole=6666@192.168.1.10/eth0,6666@192.168.1.1/9c:4a:c7:7a:a1:7a net.ifnames=0 biosdevname=0 break=skip_loading_plugins' -m
-      2048 -smp 2 -display none -daemonize -net user,hostfwd=tcp::2222-:22 -net nic
-    - while ! nc -z 127.0.0.1 2222; do echo 'Waiting for Coinboot machine to listen on
-      port 2222/SSH ...'; sleep 10; done
-    - while ! sshpass -p ubuntu ssh -o StrictHostKeyChecking=no -v -l ubuntu -p 2222 localhost
-      "grep -C 10 $VERSION /etc/motd && lsb_release -a && uname -a" ; do echo 'Waiting for SSH login to succeed...'; sleep
-      10; done
+    script:
+      - qemu-system-x86_64 -kernel build/coinboot-vmlinuz-${KERNEL} -initrd build/coinboot-initramfs-${KERNEL}
+        -append 'console=ttyS0 netconsole=6666@192.168.1.10/eth0,6666@192.168.1.1/9c:4a:c7:7a:a1:7a net.ifnames=0 biosdevname=0 break=skip_loading_plugins' -m
+        2048 -smp 2 -display none -daemonize -net user,hostfwd=tcp::2222-:22 -net nic
+      - while ! nc -z 127.0.0.1 2222; do echo 'Waiting for Coinboot machine to listen on
+        port 2222/SSH ...'; sleep 10; done
+      - while ! sshpass -p ubuntu ssh -o StrictHostKeyChecking=no -v -l ubuntu -p 2222 localhost
+        "grep -C 10 $VERSION /etc/motd && lsb_release -a && uname -a" ; do echo 'Waiting for SSH login to succeed...'; sleep
+        10; done
     stage: "Run with / on ZRAM"
-    - qemu-system-x86_64 -kernel build/coinboot-vmlinuz-${KERNEL} -initrd build/coinboot-initramfs-${KERNEL}
-      -append 'zram console=ttyS0 netconsole=6666@192.168.1.10/eth0,6666@192.168.1.1/9c:4a:c7:7a:a1:7a net.ifnames=0 biosdevname=0 break=skip_loading_plugins' -m
-      2048 -smp 2 -display none -daemonize -net user,hostfwd=tcp::2222-:22 -net nic
-    - while ! nc -z 127.0.0.1 2222; do echo 'Waiting for Coinboot machine to listen on
-      port 2222/SSH ...'; sleep 10; done
-    - while ! sshpass -p ubuntu ssh -o StrictHostKeyChecking=no -v -l ubuntu -p 2222 localhost
-      "grep -C 10 $VERSION /etc/motd && lsb_release -a && uname -a && zramctl" ; do echo 'Waiting for SSH login to succeed...'; sleep
-      10; done
+    script:
+      - qemu-system-x86_64 -kernel build/coinboot-vmlinuz-${KERNEL} -initrd build/coinboot-initramfs-${KERNEL}
+        -append 'zram console=ttyS0 netconsole=6666@192.168.1.10/eth0,6666@192.168.1.1/9c:4a:c7:7a:a1:7a net.ifnames=0 biosdevname=0 break=skip_loading_plugins' -m
+        2048 -smp 2 -display none -daemonize -net user,hostfwd=tcp::2222-:22 -net nic
+      - while ! nc -z 127.0.0.1 2222; do echo 'Waiting for Coinboot machine to listen on
+        port 2222/SSH ...'; sleep 10; done
+      - while ! sshpass -p ubuntu ssh -o StrictHostKeyChecking=no -v -l ubuntu -p 2222 localhost
+        "grep -C 10 $VERSION /etc/motd && lsb_release -a && uname -a && zramctl" ; do echo 'Waiting for SSH login to succeed...'; sleep
+        10; done
     stage: "Deploy"
     after_success:
-    - git config --global user.email "build@travis-ci.com"
-    - git config --global user.name "Travis CI"
-    - git tag -a "$(date +'%Y%m%d')" -m 'Automatic release by Travis CI'
-    - git push "https://${TOKEN}@github.com/${TRAVIS_REPO_SLUG}".git --tags
-    - git fetch origin
-    - git tag
+      - git config --global user.email "build@travis-ci.com"
+      - git config --global user.name "Travis CI"
+      - git tag -a "$(date +'%Y%m%d')" -m 'Automatic release by Travis CI'
+      - git push "https://${TOKEN}@github.com/${TRAVIS_REPO_SLUG}".git --tags
+      - git fetch origin
+      - git tag
     deploy:
       provider: releases
       api_key: ${TOKEN}
