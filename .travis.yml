@@ -15,7 +15,8 @@ jobs:
       - export VERSION=$(git describe --abbrev=0 --tags)
       - echo $VERSION
       - docker-compose up
-    stage: "Run with / on tmpfs"
+    stage: "Run"
+    name: "Run / on tmpfs"
     script:
       - qemu-system-x86_64 -kernel build/coinboot-vmlinuz-${KERNEL} -initrd build/coinboot-initramfs-${KERNEL}
         -append 'console=ttyS0 netconsole=6666@192.168.1.10/eth0,6666@192.168.1.1/9c:4a:c7:7a:a1:7a net.ifnames=0 biosdevname=0 break=skip_loading_plugins' -m
@@ -25,7 +26,7 @@ jobs:
       - while ! sshpass -p ubuntu ssh -o StrictHostKeyChecking=no -v -l ubuntu -p 2222 localhost
         "grep -C 10 $VERSION /etc/motd && lsb_release -a && uname -a" ; do echo 'Waiting for SSH login to succeed...'; sleep
         10; done
-    stage: "Run with / on ZRAM"
+    name: "Run with / on ZRAM"
     script:
       - qemu-system-x86_64 -kernel build/coinboot-vmlinuz-${KERNEL} -initrd build/coinboot-initramfs-${KERNEL}
         -append 'zram console=ttyS0 netconsole=6666@192.168.1.10/eth0,6666@192.168.1.1/9c:4a:c7:7a:a1:7a net.ifnames=0 biosdevname=0 break=skip_loading_plugins' -m
