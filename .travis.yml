@@ -1,12 +1,12 @@
 ---
 dist: trusty
 sudo: required
-env:
-  - KERNEL=4.15.0-43-generic
-  - KERNEL=4.15.0-45-generic
 jobs:
   include:
     stage: "Build"
+    env:
+      - KERNEL=4.15.0-43-generic
+      - KERNEL=4.15.0-45-generic
     before_install:
       - lscpu
       - sudo apt-get update
