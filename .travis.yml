@@ -8,7 +8,7 @@ env:
   - KERNEL=4.15.0-45-generic
 jobs:
   include:
-    stage: Build
+    stage: "Build"
     before_install:
     - lscpu
     - sudo apt-get update
@@ -17,7 +17,7 @@ jobs:
     - export VERSION=$(git describe --abbrev=0 --tags)
     - echo $VERSION
     - docker-compose up
-    stage: Run with / on tmpfs
+    stage: "Run with / on tmpfs"
     - qemu-system-x86_64 -kernel build/coinboot-vmlinuz-${KERNEL} -initrd build/coinboot-initramfs-${KERNEL}
       -append 'console=ttyS0 netconsole=6666@192.168.1.10/eth0,6666@192.168.1.1/9c:4a:c7:7a:a1:7a net.ifnames=0 biosdevname=0 break=skip_loading_plugins' -m
       2048 -smp 2 -display none -daemonize -net user,hostfwd=tcp::2222-:22 -net nic
@@ -26,7 +26,7 @@ jobs:
     - while ! sshpass -p ubuntu ssh -o StrictHostKeyChecking=no -v -l ubuntu -p 2222 localhost
       "grep -C 10 $VERSION /etc/motd && lsb_release -a && uname -a" ; do echo 'Waiting for SSH login to succeed...'; sleep
       10; done
-    stage: Run with / on ZRAM
+    stage: "Run with / on ZRAM"
     - qemu-system-x86_64 -kernel build/coinboot-vmlinuz-${KERNEL} -initrd build/coinboot-initramfs-${KERNEL}
       -append 'zram console=ttyS0 netconsole=6666@192.168.1.10/eth0,6666@192.168.1.1/9c:4a:c7:7a:a1:7a net.ifnames=0 biosdevname=0 break=skip_loading_plugins' -m
       2048 -smp 2 -display none -daemonize -net user,hostfwd=tcp::2222-:22 -net nic
@@ -35,7 +35,7 @@ jobs:
     - while ! sshpass -p ubuntu ssh -o StrictHostKeyChecking=no -v -l ubuntu -p 2222 localhost
       "grep -C 10 $VERSION /etc/motd && lsb_release -a && uname -a && zramctl" ; do echo 'Waiting for SSH login to succeed...'; sleep
       10; done
-    stage: Deploy
+    stage: "Deploy"
     after_success:
     - git config --global user.email "build@travis-ci.com"
     - git config --global user.name "Travis CI"
