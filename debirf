@@ -253,23 +253,15 @@ mkdir /newroot
 # TODO: Fine tune mount options (atime ... )
 # https://www.kernel.org/doc/Documentation/blockdev/zram.txt
 if (grep -q zram /proc/cmdline); then
-  set -x
   echo "honoring zram kernel arg"
   depmod
   modprobe -v  zram
   modprobe -v  zstd
-  cat /proc/crypto
   while ! [ -f /sys/block/zram0/disksize ]; do
     echo "Waiting for /dev/zram0 to be ready..."
     /bin/sleep 1
   done
   echo zstd > /sys/block/zram0/comp_algorithm
-  while ! grep '\[zstd\]' /sys/block/zram0/comp_algorithm; do
-    echo "Waiting for /dev/zram0 switching to use zstd..."
-    /bin/sleep 1
-  done
-  sleep 10
-  cat /sys/block/zram0/max_comp_streams
   echo \${MEMSIZE}k > /sys/block/zram0/disksize
   mkfs.ext2 -b 4096 /dev/zram0
   mount -t ext2 -o discard,noatime,diratime /dev/zram0 /newroot
@@ -282,7 +274,6 @@ if (grep -q break=preunpack /proc/cmdline); then
   /bin/sh
 fi
 
-busybox df -h
 cd /newroot
 echo unpacking rootfs...
 gunzip - < /rootfs.cgz | cpio -i
