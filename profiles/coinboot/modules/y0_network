@@ -1,5 +1,4 @@
 #!/bin/bash -e
-set -x
 
 # debirf module: network
 # setup default network interface configuration
@@ -36,6 +35,3 @@ iface lo inet loopback
 allow-hotplug eth0
 iface eth0 inet dhcp
 EOF
-
-# reset /etc/resolv.conf
-true > "${DEBIRF_ROOT}/etc/resolv.conf"
