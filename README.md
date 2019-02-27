@@ -1,5 +1,5 @@
 
-![Logo of Coinboot](https://raw.githubusercontent.com/frzb/coinboot/master/coinboot.png)
+![Logo of Coinboot](https://raw.githubusercontent.com/frzb/coinboot/master/img/coinboot.png)
 
 [![Build Status](https://travis-ci.org/frzb/coinboot-debirf.svg?branch=master)](https://travis-ci.org/frzb/coinboot-debirf)
 
