@@ -195,7 +195,6 @@ create_initrd_plugin() {
 
     # Copy in the modules for ZRAM and for Zstandard
     # We need an recent package list to determine the following variables
-    set -x
     debirf_exec apt-get update
     local KERNEL_VERS=$(ls -1 "${DEBIRF_ROOT}/lib/modules" | head -n1)
     local EXTRA_PACKAGE="linux-modules-extra-$KERNEL_VERS"
@@ -212,7 +211,7 @@ create_initrd_plugin() {
 
     local ZSTD_COMPRESS_MODULE=/lib/modules/${KERNEL_VERS}/kernel/lib/zstd/zstd_compress.ko
     install -vD "$DEBIRF_ROOT/$ZSTD_COMPRESS_MODULE" "$NEST_ROOT"/"$ZSTD_COMPRESS_MODULE"
-    
+
     # symlink /lib64 if that is done on host
     # FIXME: is this necessary?
     if [ -L /lib64 ] && [ $(readlink /lib64) = /lib ] ; then
