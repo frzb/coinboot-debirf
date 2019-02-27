@@ -1,4 +1,4 @@
-#!/bin/bash -e
+!/bin/bash -e -o pipefail
 
 # debirf: script to build debirf system.
 #
@@ -17,6 +17,10 @@
 ### VARIABLES
 
 CMD=$(basename $0)
+
+# Upstream Busybox
+BUSYBOX=1.30.0-i686
+BUSYBOX_SHA256=5776b1f4fbff641eb09024483fde28467e81bc74118c0c65ce5a8ad7a1029063
 
 DEBIRF_COMMON=${DEBIRF_COMMON:-/usr/share/debirf/common}
 source "$DEBIRF_COMMON"
@@ -43,7 +47,6 @@ export DEVICE_ARCHIVE=${DEVICE_ARCHIVE:-/usr/share/debirf/devices.tar.gz}
 
 # list of packages to include in debootstrap
 export INCLUDE=\
-busybox-static,\
 gpgv,\
 less
 
@@ -173,15 +176,46 @@ create_initrd_plugin() {
     rm -rf "$NEST_ROOT"
     mkdir -p "$NEST_ROOT"/{bin,lib}
 
+    # Ubuntu busybox is lacking mkfs.ext2 which we need for using zram
+    # We have to use an upstream binary of busybox
+    wget https://busybox.net/downloads/binaries/${BUSYBOX}/busybox -P /tmp
+    echo "$BUSYBOX_SHA256 /tmp/busybox" | sha256sum --check
+    mv /tmp/busybox "$NEST_ROOT"/bin/
+    chmod -v a+x "$NEST_ROOT"/bin/busybox
+
     # copy in busybox-static from root, and link executables
-    cp -f "$DEBIRF_ROOT"/bin/busybox "$NEST_ROOT"/bin/
-    for util in awk cpio free grep gunzip ls mkdir mount rm sh umount ; do
+    #cp -f "$DEBIRF_ROOT"/bin/busybox "$NEST_ROOT"/bin/
+    for util in awk cpio cat free grep gunzip ls mkdir mount rm sh sleep umount modprobe mkfs.ext2 depmod; do
 	ln "$NEST_ROOT"/bin/busybox "$NEST_ROOT"/bin/"$util"
     done
 
     # copy in run-init and needed libraries
     cp -f /usr/lib/klibc/bin/run-init "$NEST_ROOT"/bin/
     cp -f /lib/klibc-* "$NEST_ROOT"/lib/
+
+    # Copy in the modules for ZRAM and for Zstandard
+    # We need an recent package list to determine the following variables
+    debirf_exec apt-get update
+    local KERNEL_VERS=$(ls -1 "${DEBIRF_ROOT}/lib/modules" | head -n1)
+    local EXTRA_PACKAGE="linux-modules-extra-$KERNEL_VERS"
+    local EXTRA_PACKAGE_ARCHIVE=$(debirf_exec apt-cache show $EXTRA_PACKAGE | grep -oP $EXTRA_PACKAGE.*deb)
+    local ZRAM_MODULE=/lib/modules/${KERNEL_VERS}/kernel/drivers/block/zram/zram.ko
+    debirf_exec apt-get download $EXTRA_PACKAGE
+    debirf_exec dpkg -x $EXTRA_PACKAGE_ARCHIVE /tmp/zram
+    install -vD "$DEBIRF_ROOT/tmp/zram$ZRAM_MODULE" "$NEST_ROOT"/"$ZRAM_MODULE"
+    debirf_exec rm -rf EXTRA_PACKAGE_ARCHIVE /tmp/zram
+
+    # As we used APT again above we have to clean up afterward
+    rm -f "$DEBIRF_ROOT"/var/cache/apt/*.bin
+    rm -rf "$DEBIRF_ROOT"/var/lib/apt/lists/*
+    mkdir "$DEBIRF_ROOT/var/lib/apt/lists/partial"
+
+/lib/modules/4.18.0-15-generic/kernel/lib/zstd/zstd_compress.ko
+    local ZSTD_MODULE=/lib/modules/${KERNEL_VERS}/kernel/crypto/zstd.ko
+    install -vD "$DEBIRF_ROOT/$ZSTD_MODULE" "$NEST_ROOT"/"$ZSTD_MODULE"
+
+    local ZSTD_COMPRESS_MODULE=/lib/modules/${KERNEL_VERS}/kernel/lib/zstd/zstd_compress.ko
+    install -vD "$DEBIRF_ROOT/$ZSTD_COMPRESS_MODULE" "$NEST_ROOT"/"$ZSTD_COMPRESS_MODULE"
 
     # symlink /lib64 if that is done on host
     # FIXME: is this necessary?
@@ -205,17 +239,39 @@ create_initrd_plugin() {
 # create nest init
     cat > "$NEST_ROOT"/init <<EOF
 #!/bin/sh
-mkdir /proc
+mkdir -p -v /proc /sys /dev
 mount -t proc proc /proc
+mount -t sysfs none /sys
+mount -t devtmpfs -o nosuid,mode=0755 udev /dev
 
 if (grep -q break=top /proc/cmdline); then
   echo "honoring break=top kernel arg"
   /bin/sh
 fi
 
-mkdir /newroot
 MEMSIZE=\$(free | grep 'Mem:' | awk '{ print \$2 }')
-mount -t tmpfs -o size=\${MEMSIZE}k,mode=0755 tmpfs /newroot
+mkdir /newroot
+
+# TODO: Try zstd as compression algorithm
+# TODO: Find out of using "mem_limit' makes sense
+# TODO: Fine tune mount options (atime ... )
+# https://www.kernel.org/doc/Documentation/blockdev/zram.txt
+if (grep -q zram /proc/cmdline); then
+  echo "honoring zram kernel arg"
+  depmod
+  modprobe -v  zram
+  modprobe -v  zstd
+  while ! [ -f /sys/block/zram0/disksize ]; do
+    echo "Waiting for /dev/zram0 to be ready..."
+    /bin/sleep 1
+  done
+  echo zstd > /sys/block/zram0/comp_algorithm
+  echo \${MEMSIZE}k > /sys/block/zram0/disksize
+  mkfs.ext2 -b 4096 /dev/zram0
+  mount -t ext2 -o discard,noatime,diratime /dev/zram0 /newroot
+else
+  mount -t tmpfs -o size=\${MEMSIZE}k,mode=0755 tmpfs /newroot
+fi
 
 if (grep -q break=preunpack /proc/cmdline); then
   echo "Honoring break=preunpack kernel arg"
@@ -233,6 +289,7 @@ fi
 
 umount /proc
 echo running /init2...
+cd /
 exec /bin/run-init /newroot /init2 < ./dev/console > ./dev/console
 EOF
     chmod a+x "$NEST_ROOT"/init
