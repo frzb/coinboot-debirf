@@ -1,5 +1,4 @@
 #!/bin/bash -e
-set -x
 
 # debirf module: a1_install-kernel
 
