@@ -205,6 +205,11 @@ create_initrd_plugin() {
     install -vD "$DEBIRF_ROOT/tmp/zram$ZRAM_MODULE" "$NEST_ROOT"/"$ZRAM_MODULE"
     debirf_exec rm -rf EXTRA_PACKAGE_ARCHIVE /tmp/zram
 
+    # As we used APT again above we have to clean up afterward
+    rm -f "$DEBIRF_ROOT"/var/cache/apt/*.bin
+    rm -rf "$DEBIRF_ROOT"/var/lib/apt/lists/*
+    mkdir "$DEBIRF_ROOT/var/lib/apt/lists/partial"
+
 /lib/modules/4.18.0-15-generic/kernel/lib/zstd/zstd_compress.ko
     local ZSTD_MODULE=/lib/modules/${KERNEL_VERS}/kernel/crypto/zstd.ko
     install -vD "$DEBIRF_ROOT/$ZSTD_MODULE" "$NEST_ROOT"/"$ZSTD_MODULE"
