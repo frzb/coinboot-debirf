@@ -12,9 +12,6 @@ language: bash
 before_install:
   - sudo apt-get update
   - sudo apt-get  install --yes qemu-system-x86 ipxe-qemu sshpass
-env:
-  - KERNEL=4.15.0-43-generic
-  - KERNEL=4.15.0-45-generic
 
 
 jobs:
@@ -24,6 +21,9 @@ jobs:
       - export VERSION=$(git describe --abbrev=0 --tags)
       - echo $VERSION
       - docker-compose up
+    env:
+      - KERNEL=4.15.0-43-generic
+      - KERNEL=4.15.0-45-generic
 
     stage: test
     name: "Run / on tmpfs"
