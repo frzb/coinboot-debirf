@@ -1,11 +1,12 @@
 ---
+dist: trusty
+sudo: required
+language: bash
+
 
 jobs:
   include:
     - stage: build KERNEL=4.15.0-43-generic SUITE=xenial
-      dist: trusty
-      sudo: required
-      language: bash
       env: KERNEL=4.15.0-43-generic SUITE=xenial
       before_install: &before_install
         - sudo apt-get update
