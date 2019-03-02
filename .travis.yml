@@ -7,9 +7,8 @@ language: bash
 jobs:
   include:
     - stage: build and run
-      name: build KERNEL=4.15.0-43-generic SUITE=xenial
-      env: KERNEL=4.15.0-43-generic SUITE=xenial
       script: build_and_run
+      env: KERNEL=4.15.0-43-generic SUITE=xenial
       deploy: &deploy
         provider: releases
         api_key: ${TOKEN}
@@ -20,7 +19,6 @@ jobs:
           all_branches: true
         draft: true
       script: build_and_run
-      name: build KERNEL=4.15.0-45-generic SUITE=xenial
       env: KERNEL=4.15.0-45-generic SUITE=xenial
       deploy: &deploy
         provider: releases
