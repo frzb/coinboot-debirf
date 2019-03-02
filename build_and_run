@@ -29,16 +29,16 @@ CMDLINE='console=ttyS0
 
 run_qemu() {
   $zram=$1
-  qemu-system-x86_64
+  qemu-system-x86_64 \
   -kernel build/coinboot-vmlinuz-${KERNEL} \
   -initrd build/coinboot-initramfs-${KERNEL} \
-  -append $CMDLINE
-  -m 2048
-  -smp 4
-  -display none
-  -daemonize
-  -net user,hostfwd=tcp::2222-:22
-  -net nic
+  -append $CMDLINE \
+  -m 2048 \
+  -smp 4 \
+  -display none \
+  -daemonize \
+  -net user,hostfwd=tcp::2222-:22 \
+  -net nic \
   $zram
  }
 
