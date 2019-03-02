@@ -2,12 +2,8 @@
 dist: trusty
 sudo: required
 language: bash
-env:
-  - KERNEL=4.15.0-43-generic SUITE=xenial
-  - KERNEL=4.15.0-45-generic SUITE=xenial
 
-jobs:
-  include:
+build_and_run: $build_and_run
     - stage: build and run
       script: ./build_and_run
       deploy: &deploy
@@ -20,6 +16,12 @@ jobs:
           all_branches: true
         draft: true
 
+jobs:
+  include:
+    - <<: *build_and_run
+      env: KERNEL=4.15.0-43-generic SUITE=xenial
+    - <<: *build_and_run
+      env: KERNEL=4.15.0-45-generic SUITE=xenial
     - stage: publish
       deploy: &deploy
         provider: releases
