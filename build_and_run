@@ -26,11 +26,11 @@ export VERSION='0.98 Beta'
 # Because escaping quotes is mess here and even more how TravisCI handles this escap.
 # So we put the kernel command line in a function.
 cmdline() {
-echo -n '"console=ttyS0 \
+echo -n 'console=ttyS0
          netconsole=6666@192.168.1.10/eth0,6666@192.168.1.1/9c:4a:c7:7a:a1:7a \
-         net.ifnames=0 \
-         biosdevname=0 \
-         break=skip_loading_plugins"'
+         net.ifnames=0
+         biosdevname=0
+         break=skip_loading_plugins'
     }
 
 run_qemu() {
