@@ -1,23 +1,23 @@
 ---
 
-- $build_and_run
-stage: build and run
-dist: trusty
-sudo: required
-language: bash
-script: ./build_and_run
-deploy: &deploy
-provider: releases
-api_key: ${TOKEN}
-file_glob: true
-file: build/*
-skip_cleanup: true
-on:
-  all_branches: true
-  draft: true
 
 jobs:
   include:
+    - &build_and_run
+      stage: build and run
+      dist: trusty
+      sudo: required
+      language: bash
+      script: ./build_and_run
+      deploy: &deploy
+      provider: releases
+      api_key: ${TOKEN}
+      file_glob: true
+      file: build/*
+      skip_cleanup: true
+      on:
+        all_branches: true
+        draft: true
     - <<: *build_and_run
       env: KERNEL=4.15.0-43-generic SUITE=xenial
     - <<: *build_and_run
