@@ -212,8 +212,8 @@ create_initrd_plugin() {
     mkdir "$DEBIRF_ROOT/var/lib/apt/lists/partial"
 
     # Zstd is in the kernel since 4.14 (released November 2017).
-    # We currently only support 4.4 or 4.18.
-    if ! [[ $DEBIRF_KERNEL =~ '4.4' ]]; then
+    # We currently only support 4.4, 4.15 or 4.18.
+    if ! [[ $DEBIRF_KERNEL =~ '4.4'|'4.15' ]]; then
     local ZSTD_MODULE=/lib/modules/${KERNEL_VERS}/kernel/crypto/zstd.ko
     install -vD "$DEBIRF_ROOT/$ZSTD_MODULE" "$NEST_ROOT"/"$ZSTD_MODULE"
 
