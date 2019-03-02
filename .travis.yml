@@ -1,20 +1,20 @@
 ---
+
+- $build_and_run
+stage: build and run
 dist: trusty
 sudo: required
 language: bash
-
-build_and_run: $build_and_run
-    - stage: build and run
-      script: ./build_and_run
-      deploy: &deploy
-        provider: releases
-        api_key: ${TOKEN}
-        file_glob: true
-        file: build/*
-        skip_cleanup: true
-        on:
-          all_branches: true
-        draft: true
+script: ./build_and_run
+deploy: &deploy
+provider: releases
+api_key: ${TOKEN}
+file_glob: true
+file: build/*
+skip_cleanup: true
+on:
+  all_branches: true
+  draft: true
 
 jobs:
   include:
