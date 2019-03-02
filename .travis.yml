@@ -18,7 +18,7 @@ jobs:
         on:
           all_branches: true
         draft: true
-      script: build_and_run
+    - script: build_and_run
       env: KERNEL=4.15.0-45-generic SUITE=xenial
       deploy: &deploy
         provider: releases
