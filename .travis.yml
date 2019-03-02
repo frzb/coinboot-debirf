@@ -44,10 +44,10 @@ jobs:
           all_branches: true
         draft: true
 
-    - stage: build KERNEL=4.15.0-43-generic SUITE=xenial and publish
-      env: KERNEL=4.15.0-45-generic SUITE=xenial
-      before_install:
-        <<: *before_install
-      deploy:
-        <<: *deploy
-        draft: false
+       #    - stage: build KERNEL=4.15.0-43-generic SUITE=xenial and publish
+       #      env: KERNEL=4.15.0-45-generic SUITE=xenial
+       #      before_install:
+       #        <<: *before_install
+       #      deploy:
+       #        <<: *deploy
+       #        draft: false
