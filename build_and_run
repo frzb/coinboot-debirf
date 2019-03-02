@@ -44,12 +44,12 @@ run_qemu() {
   -daemonize \
   -net user,hostfwd=tcp::2222-:22 \
   -net nic \
-  -append 'console=ttyS0 \
+  -append "console=ttyS0 \
            netconsole=6666@192.168.1.10/eth0,6666@192.168.1.1/9c:4a:c7:7a:a1:7a \
            net.ifnames=0 \
            biosdevname=0 \
            break=skip_loading_plugins \
-           $zram'
+           $zram"
  }
 
 verify_over_ssh() {
