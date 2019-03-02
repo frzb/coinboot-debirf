@@ -22,11 +22,11 @@ set -x
 export RELEASE=$(git describe --abbrev=0 --tags)
 export VERSION='0.98 Beta'
 
-CMDLINE='console=ttyS0
+CMDLINE=\'console=ttyS0
   netconsole=6666@192.168.1.10/eth0,6666@192.168.1.1/9c:4a:c7:7a:a1:7a
   net.ifnames=0
   biosdevname=0
-  break=skip_loading_plugins'
+  break=skip_loading_plugins\'
 
 run_qemu() {
   zram=$1
