@@ -1,4 +1,4 @@
-#!/bin/bash -e 
+#!/bin/bash -e -o pipefail
 set -x
 
 # Copyright (C) 2019 Gunter Miegel coinboot.io
@@ -22,18 +22,23 @@ set -x
 export RELEASE=$(git describe --abbrev=0 --tags)
 export VERSION='0.98 Beta'
 
-CMDLINE="'console=ttyS0
-  netconsole=6666@192.168.1.10/eth0,6666@192.168.1.1/9c:4a:c7:7a:a1:7a
-  net.ifnames=0
-  biosdevname=0
-  break=skip_loading_plugins'"
+# Let's do some trickery here.
+# Because escaping quotes is mess here and even more how TravisCI handles this escap.
+# So we put the kernel command line in a function. 
+cmdline() {
+echo -n \'"console=ttyS0 \
+         netconsole=6666@192.168.1.10/eth0,6666@192.168.1.1/9c:4a:c7:7a:a1:7a \
+         net.ifnames=0 \
+         biosdevname=0 \
+         break=skip_loading_plugins"\'
+    }
 
 run_qemu() {
   zram=$1
   qemu-system-x86_64 \
   -kernel build/coinboot-vmlinuz-${KERNEL} \
   -initrd build/coinboot-initramfs-${KERNEL} \
-  -append $CMDLINE \
+  -append cmdline \
   -m 2048 \
   -smp 4 \
   -display none \
