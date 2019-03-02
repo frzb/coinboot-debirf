@@ -24,6 +24,7 @@ jobs:
     - <<: *build_and_run
       env: KERNEL=4.18.0-15-generic SUITE=cosmic
     - stage: publish
+      script: skip
       deploy: &deploy
         provider: releases
         api_key: ${TOKEN}
