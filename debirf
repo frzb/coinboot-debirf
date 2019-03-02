@@ -211,7 +211,6 @@ create_initrd_plugin() {
     rm -rf "$DEBIRF_ROOT"/var/lib/apt/lists/*
     mkdir "$DEBIRF_ROOT/var/lib/apt/lists/partial"
 
-/lib/modules/4.18.0-15-generic/kernel/lib/zstd/zstd_compress.ko
     local ZSTD_MODULE=/lib/modules/${KERNEL_VERS}/kernel/crypto/zstd.ko
     install -vD "$DEBIRF_ROOT/$ZSTD_MODULE" "$NEST_ROOT"/"$ZSTD_MODULE"
 
