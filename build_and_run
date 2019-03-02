@@ -38,7 +38,7 @@ run_qemu() {
   qemu-system-x86_64 \
   -kernel build/coinboot-vmlinuz-${KERNEL} \
   -initrd build/coinboot-initramfs-${KERNEL} \
-  -append cmdline \
+  -append $(cmdline) \
   -m 2048 \
   -smp 4 \
   -display none \
