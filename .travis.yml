@@ -6,7 +6,8 @@ language: bash
 
 jobs:
   include:
-    - stage: build KERNEL=4.15.0-43-generic SUITE=xenial
+    - stage: build and run
+      name: build KERNEL=4.15.0-43-generic SUITE=xenial
       env: KERNEL=4.15.0-43-generic SUITE=xenial
       before_install: &before_install
         - sudo apt-get update
@@ -44,8 +45,7 @@ jobs:
         on:
           all_branches: true
         draft: true
-
-    - stage: build KERNEL=4.15.0-45-generic SUITE=xenial and publish
+      name: build KERNEL=4.15.0-45-generic SUITE=xenial
       env: KERNEL=4.15.0-45-generic SUITE=xenial
       before_install: &before_install
         - sudo apt-get update
@@ -74,6 +74,17 @@ jobs:
         - while ! sshpass -p ubuntu ssh -o StrictHostKeyChecking=no -l ubuntu -p 2222 localhost
           "grep -C 10 $RELEASE /etc/motd && lsb_release -a && uname -a && zramctl" ; do echo 'Waiting for SSH login to succeed...'; sleep
           10; done
+      deploy: &deploy
+        provider: releases
+        api_key: ${TOKEN}
+        file_glob: true
+        file: build/*
+        skip_cleanup: true
+        on:
+          all_branches: true
+        draft: true
+
+    - stage: publish
       deploy: &deploy
         provider: releases
         api_key: ${TOKEN}
