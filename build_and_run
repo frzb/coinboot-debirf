@@ -1,5 +1,5 @@
-#!/bin/bash -e -o pipefail
-set -x
+#!/bin/bash
+set -x -e -o pipefail
 
 # Copyright (C) 2019 Gunter Miegel coinboot.io
 #
@@ -24,7 +24,7 @@ export VERSION='0.98 Beta'
 
 # Let's do some trickery here.
 # Because escaping quotes is mess here and even more how TravisCI handles this escap.
-# So we put the kernel command line in a function. 
+# So we put the kernel command line in a function.
 cmdline() {
 echo -n \'"console=ttyS0 \
          netconsole=6666@192.168.1.10/eth0,6666@192.168.1.1/9c:4a:c7:7a:a1:7a \
