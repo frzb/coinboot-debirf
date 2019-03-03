@@ -10,14 +10,14 @@ jobs:
       sudo: required
       language: bash
       script: ./build_and_run
-      deploy: &deploy
-      provider: releases
-      api_key: ${TOKEN}
-      file_glob: true
-      file: build/*
-      skip_cleanup: true
-      on:
-        all_branches: true
+      deploy:
+        provider: releases
+        api_key: ${TOKEN}
+        file_glob: true
+        file: build/*
+        skip_cleanup: true
+        on:
+          all_branches: true
         draft: true
     - <<: *build_and_run
       env: KERNEL=4.15.0-45-generic SUITE=xenial
@@ -25,7 +25,7 @@ jobs:
       env: KERNEL=4.18.0-15-generic SUITE=cosmic
     - stage: publish
       script: skip
-      deploy: &deploy
+      deploy:
         provider: releases
         api_key: ${TOKEN}
         file_glob: true
