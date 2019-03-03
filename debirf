@@ -204,7 +204,7 @@ create_initrd_plugin() {
     debirf_exec apt-get download $EXTRA_PACKAGE
     debirf_exec dpkg -x $EXTRA_PACKAGE_ARCHIVE /tmp/zram
     install -vD "$DEBIRF_ROOT/tmp/zram$ZRAM_MODULE" "$NEST_ROOT"/"$ZRAM_MODULE"
-    debirf_exec rm -rf EXTRA_PACKAGE_ARCHIVE /tmp/zram
+    debirf_exec rm -rvf $EXTRA_PACKAGE_ARCHIVE /tmp/zram
 
     # As we used APT again above we have to clean up afterward
     rm -f "$DEBIRF_ROOT"/var/cache/apt/*.bin
