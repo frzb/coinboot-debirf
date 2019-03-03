@@ -17,6 +17,7 @@ jobs:
         - git push "https://${TOKEN}@github.com/${TRAVIS_REPO_SLUG}".git --tags
         - git fetch origin
         - git tag
+          if: tag IS blank
       deploy:
         provider: releases
         api_key: ${TOKEN}
@@ -24,7 +25,7 @@ jobs:
         file: build/*
         skip_cleanup: true
         on:
-          all_branches: true
+          branch: master
         draft: true
     - <<: *build_and_run
       env: KERNEL=4.15.0-45-generic SUITE=xenial
