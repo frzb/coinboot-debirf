@@ -29,7 +29,7 @@ jobs:
     - <<: *build_and_run
       env: KERNEL=4.15.0-45-generic SUITE=xenial
     - <<: *build_and_run
-      env: KERNEL=4.18.0-15-generic SUITE=cosmic
+      env: KERNEL=5.0.0-13-generic SUITE=disco
     - stage: publish
       script: skip
       deploy:
