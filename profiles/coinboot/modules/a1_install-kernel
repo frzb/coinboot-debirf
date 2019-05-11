@@ -1,4 +1,5 @@
 #!/bin/bash -e
+set -x
 
 # debirf module: a1_install-kernel
 
@@ -20,7 +21,7 @@
 # They are Copyright 2007, and are all released under the GPL,
 # version 3 or later.
 #
-# Copyright (C) 2018 Gunter Miegel coinboot.io
+# Copyright (C) 2018, 2019 Gunter Miegel coinboot.io
 
 # clear out old modules if they exist, to avoid confusion
 rm -rf "$DEBIRF_ROOT/lib/modules"
@@ -48,10 +49,11 @@ if [ -z "$DEBIRF_KERNEL_PACKAGE" ] ; then
     # to just use "apt-get download", but that's only supported since
     # wheezy.
   fi
-  debirf_exec apt-get install -d -y "$KNAME"
-  # Attention: For a Kernel > 4.4 Ubuntu has kernel and modules are in separate packages.
+  #debirf_exec apt-get install -d -y "$KNAME"
+  debirf_exec apt-get install -d -y --no-install-recommends "$KNAME"
+  # Attention: For a Kernel > 4.4 Ubuntu kernel and modules are in separate packages.
   if ! [[ $DEBIRF_KERNEL =~ '4.4' ]]; then
-   debirf_exec apt-get install -d -y linux-modules-$DEBIRF_KERNEL
+   debirf_exec apt-get install -d -y --no-install-recommends  linux-modules-$DEBIRF_KERNEL
   fi
 
 else
@@ -62,28 +64,43 @@ fi
 KPKG=$(basename "$DEBIRF_ROOT"/var/cache/apt/archives/linux-image-*)
 
 echo "extracting kernel package $KPKG..."
-debirf_exec dpkg --extract /var/cache/apt/archives/"$KPKG" /
+debirf_exec dpkg --unpack /var/cache/apt/archives/"$KPKG" 
+
+ls -la $DEBIRF_ROOT/usr/bin/apt-get
 
 if ! [[ $DEBIRF_KERNEL =~ '4.4' ]]; then
   MODPKG=$(basename "$DEBIRF_ROOT"/var/cache/apt/archives/linux-modules-*)
   echo "extracting kernel module package $MODPKG..."
-  debirf_exec dpkg --extract /var/cache/apt/archives/"$MODPKG" /
+  debirf_exec dpkg --unpack /var/cache/apt/archives/"$MODPKG" 
 fi
+
+ls -la $DEBIRF_ROOT/usr/bin/apt-get
+
+cd $DEBIRF_ROOT
+pwd
+ls -la $DEBIRF_ROOT
+ls -la
+touch $DEBIRF_ROOT/foobar
+
 
 # install the module init tools, since they are needed for depmod
 # these are in kmod in current releases
 # also add 'cpio' which is need for packing the kernel
-debirf_exec apt-get --assume-yes install kmod cpio
+#debirf_exec apt-get install -y kmod cpio
 
 # depmod to create module list
+ls -la $DEBIRF_ROOT
+ls -la $DEBIRF_ROOT/sbin/depmod
 KVERS=$(ls -1 -t "$DEBIRF_ROOT/lib/modules" | head -n1)
 echo "generating modules.dep..."
 debirf_exec depmod -a "$KVERS"
+#debirf_exec bash -c "echo '$PATH'"
+debirf_exec apt-get -y install kmod
 
 # extract kernel and debian stock initrd from the build root:
 mv "$DEBIRF_ROOT"/boot/vmlinu* "$DEBIRF_BUILDD"
 
 # remove kernel symlinks
-if [ -L "$DEBIRF_ROOT"/vmlinuz ] ; then
-    rm "$DEBIRF_BUILDD"/vmlinuz
+if [[ -L "$DEBIRF_ROOT"/vmlinuz ]] ; then
+    rm "$DEBIRF_ROOT"/vmlinuz
 fi
