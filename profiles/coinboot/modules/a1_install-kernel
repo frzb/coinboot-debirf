@@ -64,38 +64,25 @@ fi
 KPKG=$(basename "$DEBIRF_ROOT"/var/cache/apt/archives/linux-image-*)
 
 echo "extracting kernel package $KPKG..."
-debirf_exec dpkg --unpack /var/cache/apt/archives/"$KPKG" 
+debirf_exec dpkg --unpack /var/cache/apt/archives/"$KPKG"
 
 ls -la $DEBIRF_ROOT/usr/bin/apt-get
 
 if ! [[ $DEBIRF_KERNEL =~ '4.4' ]]; then
   MODPKG=$(basename "$DEBIRF_ROOT"/var/cache/apt/archives/linux-modules-*)
   echo "extracting kernel module package $MODPKG..."
-  debirf_exec dpkg --unpack /var/cache/apt/archives/"$MODPKG" 
+  debirf_exec dpkg --unpack /var/cache/apt/archives/"$MODPKG"
 fi
-
-ls -la $DEBIRF_ROOT/usr/bin/apt-get
-
-cd $DEBIRF_ROOT
-pwd
-ls -la $DEBIRF_ROOT
-ls -la
-touch $DEBIRF_ROOT/foobar
-
-
 # install the module init tools, since they are needed for depmod
 # these are in kmod in current releases
 # also add 'cpio' which is need for packing the kernel
 #debirf_exec apt-get install -y kmod cpio
 
 # depmod to create module list
-ls -la $DEBIRF_ROOT
-ls -la $DEBIRF_ROOT/sbin/depmod
 KVERS=$(ls -1 -t "$DEBIRF_ROOT/lib/modules" | head -n1)
 echo "generating modules.dep..."
 debirf_exec depmod -a "$KVERS"
-#debirf_exec bash -c "echo '$PATH'"
-debirf_exec apt-get -y install kmod
+#debirf_exec apt-get -y install kmod
 
 # extract kernel and debian stock initrd from the build root:
 mv "$DEBIRF_ROOT"/boot/vmlinu* "$DEBIRF_BUILDD"
