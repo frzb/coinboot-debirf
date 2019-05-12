@@ -63,14 +63,17 @@ fi
 
 KPKG=$(basename "$DEBIRF_ROOT"/var/cache/apt/archives/linux-image-*)
 
-echo "extracting kernel package $KPKG..."
+# Before cosmic 'dpkg --extract <pkg> /' was used instead of '--unpkack'.
+# But at cosmic it changed its behavior to cleanup destination directories 
+# before extracting data to them which breaks the whole debootstraped rootfs.
+echo "Unpacking kernel package $KPKG..."
 debirf_exec dpkg --unpack /var/cache/apt/archives/"$KPKG"
 
 ls -la $DEBIRF_ROOT/usr/bin/apt-get
 
 if ! [[ $DEBIRF_KERNEL =~ '4.4' ]]; then
   MODPKG=$(basename "$DEBIRF_ROOT"/var/cache/apt/archives/linux-modules-*)
-  echo "extracting kernel module package $MODPKG..."
+  echo "Unpacking kernel module package $MODPKG..."
   debirf_exec dpkg --unpack /var/cache/apt/archives/"$MODPKG"
 fi
 # install the module init tools, since they are needed for depmod
