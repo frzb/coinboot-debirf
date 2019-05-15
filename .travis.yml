@@ -6,10 +6,10 @@ jobs:
     - &build_and_run
       env: KERNEL=4.15.0-43-generic SUITE=xenial
       stage: build and run
-      dist: trusty
+      dist: xenial
       sudo: required
       language: bash
-      script: ./build_and_run
+      script: docker-compose up
       after_success:
         - git config --global user.email "build@travis-ci.com"
         - git config --global user.name "Travis CI"
