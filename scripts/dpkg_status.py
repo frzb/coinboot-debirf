@@ -22,7 +22,8 @@ This script consumes two DPKG status files and can display the difference
 between both on package section level.
 It can also merge both files to a union set with no redudant packages sections.
 
-The purpose of this is to track status changes of DPKG between two points in time in a separate file.
+The purpose of this is to track status changes of DPKG between two points in time 
+in a separate file.
 And it provides the abillity to merge that file into an existing DPKG status file.
 """
 
@@ -49,7 +50,6 @@ def print_dict(set_dict):
     Prints the package text blocks from a dict.
     """
     for package_block in set_dict:
-        #print(set_dict[package_block] + '\n')
         print(set_dict[package_block] + '\n')
 
 def main():

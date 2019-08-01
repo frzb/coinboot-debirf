@@ -1,4 +1,4 @@
-#!/bin/bash -e
+#!/usr/bin/python3
 
 # Copyright (C) 2018 Gunter Miegel coinboot.io
 #
@@ -17,89 +17,91 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-EXCLUDE='^\/(proc|sys|dev|run|tmp|vagrant|var\/log|usr\/share\/dbus-1\/system-services|var\/lib/\dpkg\/[^info]|var\/cache).*'
-OUTFILE=/tmp/plugin_file_list
-OUTFILE_FINAL=/tmp/plugin_file_list_final
-DPKG_STATUS=/var/lib/dpkg/status
-INITIAL_DPKG_STATUS=/tmp/initial_status
-FINAL_DPKG_STATUS=/tmp/dpkg_status
-PID_FILE=/tmp/plugin_create_pid
+"""Create Coinboot Plugins
 
-function start {
-  # Inside a Docker/runc container '/proc' is read-only, so we are skipping this step.
-  # Running outside a container can be identified by the entries of /proc/1/cgroup ending with plain ':/'.
-  if grep -qP 'cpu.*:\/$' /proc/1/cgroup; then
-    echo "200000" | sudo tee /proc/sys/fs/inotify/max_user_watches
-  fi
+Usage:
+  create_plugin start
+  create_plugin finish <plugin_name>
 
-  sudo rm -fv $OUTFILE $OUTFILE_FINAL $INITIAL_DPKG_STATUS $FINAL_DPKG_STATUS $PID_FILE
+Options:
+  -h --help     Show this screen.
 
-  # TODO Also track deleted files
-  # According to strace is looks like --exclude is not preventing building the
-  # "watches" for the excluded directories but filters all file system events on them.
-  if [ $(which inotifywait) ]; then
-    sudo rm -f $OUTFILE
-    nohup sudo inotifywait -m -r --format '%w%f' -e create -e attrib -e moved_from -e moved_to -e modify --exclude $EXCLUDE -o $OUTFILE / > /tmp/plugin.log 2>&1 &
-  else
-    echo 'inotifywait is missing.'
-    echo 'Please install the package inotify-tools'
-    exit
-  fi
+"""
 
-  PID=$!
+import os
+import tarfile
+import re
+from subprocess import call
+from docopt import docopt
 
-  echo "PID of the process watch for file changes is: $PID"
+DPKG_STATUS = '/var/lib/dpkg/status'
+INITIAL_DPKG_STATUS = '/tmp/initial_status'
+FINAL_DPKG_STATUS = '/tmp/dpkg_status'
+PLUGIN_DIR = '/mnt/plugin/rootfs'
 
-  echo $PID > $PID_FILE
+EXCLUDE = ('/dev/',
+           '/proc/',
+           '/run/',
+           '/sys/',
+           '/tmp/',
+           '/usr/src',
+           '/usr/include',
+           '/usr/share/dbus-1/system-services',
+           '/vagrant',
+           '/var/cache',
+           '/var/lib/apt/lists',
+           '/var/lib/dpkg/[^info]',
+           '/var/log',
+           '.*__pycache__.*',
+           '.wget-hsts'
+           )
 
-  # Inotifywait takes some time to build up the recursive file watching on
-  # / - so we have to wait and verify that we only proceed after the prepations
-  # are done.
-  while ! grep -q 'Watches established.' /tmp/plugin.log; do
-    echo -ne 'Waiting for file watching to be established...\r'
-    sleep 0.2
-  done
 
-  cp $DPKG_STATUS $INITIAL_DPKG_STATUS
-}
+def find(path_to_walk):
+    """Return results similar to the Unix find command run without options
+    i.e. traverse a directory tree and return all the file paths
+    """
+    return [os.path.join(path, file)
+            for (path, dirs, files) in os.walk(path_to_walk)
+            for file in files]
 
-function finish {
-  plugin_name=$1
+def main(arguments):
+    #print(arguments)
+    if arguments['start']:
+        call(['cp', '-v', DPKG_STATUS, INITIAL_DPKG_STATUS])
+    elif arguments['finish']:
+        f = open(FINAL_DPKG_STATUS, 'w')
+        call(['dpkg_status.py', '--old', INITIAL_DPKG_STATUS, '--new', DPKG_STATUS, '--diff'], stdout=f)
 
-  sudo kill $(cat /tmp/plugin_create_pid)
+        files_for_plugin_archive = []
 
-  dpkg_status.py --old $INITIAL_DPKG_STATUS --new $DPKG_STATUS --diff > $FINAL_DPKG_STATUS
+        for path in find(PLUGIN_DIR):
+            cleaned_path = re.sub(PLUGIN_DIR, '', path)
+            # FIXME: Switch to re.match() against path without PLUGIN_DIR prefix
+            if any(re.findall(pattern, cleaned_path) for pattern in EXCLUDE):
+                print('Excluded:', cleaned_path)
+            else:
+                print('Included:', cleaned_path)
+                files_for_plugin_archive.append(cleaned_path)
 
-  # Test all collected files if they really exists and if so write them
-  # to a final file list.
-  # Finally add the dpkg_status file we create beforehand.
-  while read path; do
-    if [ -f "$path" ]; then
-      echo $path
-      echo $path >> "$OUTFILE_FINAL"
-    fi
-  done < <(sort -u $OUTFILE)
+        files_for_plugin_archive.append(FINAL_DPKG_STATUS)
 
-  echo $FINAL_DPKG_STATUS >> $OUTFILE_FINAL
+        tar = tarfile.open(arguments['<plugin_name>'] + ".tar.gz", "w:gz")
+        for path in files_for_plugin_archive:
+            # If a file was deleted which was in the lower directory
+            # a whiteout file is created in the upper directory.
+            # So we don't can look at the upper director to track the
+            # deletion of such files. Else we look if the file is there
+            # at the merged directory with 'os.path.exists()'.
+            if os.path.exists(path):
+                # We have to specfiy explictly the file name in
+                # the archive to get an absolute path wit a leading '/'
+                tar.add(path, arcname=path)
+            else:
+                print('Whiteout file from lower dir:', path)
+        tar.close()
 
-  tar -czvf $plugin_name.tar.gz -P -T $OUTFILE_FINAL
-}
 
-function upload {
-  filepath=$1
-  url=$2
-  filename=$(basename $filepath)
-  curl -F "file=@$filepath;filename=$filename" $url
-}
-
-case "$1" in
-  'start')
-  start
-  ;;
-  'finish')
-  finish $2
-  ;;
-  'upload')
-  upload $2 $3
-  ;;
-esac
+if __name__ == '__main__':
+    arguments = docopt(__doc__, version='Create Coinboot Plugins v0.1')
+    main(arguments)
