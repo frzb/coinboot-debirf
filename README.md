@@ -1,3 +1,7 @@
+# This repository is deprecated
+**It has been integrated into [frzb/coinboot](https://github.com/frzb/coinboot)**
+
+---
 
 ![Logo of Coinboot](https://raw.githubusercontent.com/frzb/coinboot/master/img/coinboot.png)
 
